@@ -1,67 +1,104 @@
-# Full-stack: стартовое окружение
+# Сверка начислений 1С → PostgreSQL
 
-Условие: [fullstack.pdf](fullstack.pdf). Лимит: до 4 часов на подготовку 1С + до 12 часов на разработку.
+Приложение импортирует лицевые счета, начисления и платежи из read-only HTTP API 1С
+в PostgreSQL и сверяет начисления за выбранный месяц. Суммы передаются и хранятся
+целым числом копеек.
 
-## Что уже есть
+## Состав
 
-Локальный read-only HTTP mock с фиксированными данными и пустая PostgreSQL с ролями
-`importer` и `agent_reader`. Реализация приложения, таблиц, импорта, сверки, инструментов
-и двух skills остаётся задачей кандидата. Готового решения здесь нет.
+- `onec/configuration` — исходники минимальной конфигурации 1С;
+- `source` — FastAPI, импорт, сверка и CLI;
+- `frontend` — React + TypeScript;
+- `postgres` — создание отдельной read-only роли агента;
+- `fixtures` — фиксированный набор данных стартового контракта;
+- `scripts` — preflight и контролируемое внесение расхождения.
 
-**Настоящую 1С кандидат разворачивает самостоятельно:** минимальная конфигурация,
-загрузка фикстур, read-only HTTP/OData и воспроизводимое восстановление.
-См. [ONEC_SETUP.md](ONEC_SETUP.md). Mock помогает начать разработку, но не заменяет
-обязательный интеграционный прогон с 1С.
+HTTP API и CLI используют `ReconciliationService`, поэтому правила сравнения не
+дублируются. Импорт сначала получает и проверяет весь снимок источника, затем
+сохраняет его одной транзакцией с upsert. Повторный запуск идемпотентен.
 
-## Быстрый запуск
+## Запуск
 
-Требуется Docker Engine/Desktop с Compose v2+. Из этой папки:
+Требуется Docker Engine/Desktop с Compose v2+.
 
 ```bash
 cp .env.example .env
-docker compose up -d --build --wait
-curl http://localhost:8093/health
-# Проверка стартового источника (Python/uv на хосте не нужны):
-docker compose exec source-mock uv run python -c "import httpx; print(httpx.get('http://localhost:8000/accounts').json())"
+COMPOSE_BAKE=false DOCKER_BUILDKIT=0 docker compose up -d --build --wait
 ```
 
-Для разработки Python: Python 3.12 и uv 0.11.6, `uv sync --frozen`, `uv run pytest`.
-Frontend по условию React + TypeScript создаёт кандидат.
-Источник: `http://localhost:8093`, внутри Compose `http://source-mock:8000`.
-PostgreSQL: `localhost:5543/reporting`, внутри Compose `postgres:5432`.
-Импортёр: `importer` / `demo-importer-local`; агент: `agent_reader` / `demo-reader-local`.
-Это публичные локальные учебные учётные данные. Агенту не передавать пароль импортёра.
-Создавайте таблицы от `importer` — тогда автоматически выдаётся SELECT для `agent_reader`.
+Классический режим сборки указан для каталогов, в пути которых есть кириллица.
 
-Данные и точные суммы: [CONTRACT.md](CONTRACT.md), `fixtures/data.json`.
-Mock неизменяемый: сброс исходных данных — `docker compose restart source-mock`.
-Сброс только этой учебной PostgreSQL (удаляет результат импорта):
-`docker compose down -v`, затем `docker compose up -d --wait`.
-Скрипт внесения/устранения расхождений в своих таблицах пишет кандидат.
-Остановка: `docker compose down`.
+- интерфейс: <http://localhost:5173>;
+- backend и OpenAPI: <http://localhost:8080/docs>;
+- mock-источник: <http://localhost:8093>;
+- PostgreSQL: `localhost:5543/reporting`.
 
-## Проверка настоящей 1С
+## Проверка сценария
 
-Кандидат заполняет ONEC_* в `.env`. При установленном uv:
-`uv run --env-file .env python scripts/preflight.py --real`.
-Код 2 и BLOCKED означают неготовность источника. Команда проверяет чтение коллекций;
-совпадение схемы и эталонных данных кандидат подтверждает отдельно.
-Доступ к coding/CLI agent, ключ модели и квоту организатор выдаёт отдельно.
+```bash
+curl -X POST http://localhost:8080/api/import
+curl 'http://localhost:8080/api/reconcile?period=2026-08'
 
-## Работа и сдача через GitHub
+# Повторный импорт возвращает те же количества и не создаёт дубликаты.
+curl -X POST http://localhost:8080/api/import
 
-Создайте отдельный репозиторий **в своём GitHub-аккаунте** и перенесите в него
-только папку своего задания из стартового комплекта. Работайте и сохраняйте
-результат в этом репозитории. Первый коммит — стартовый комплект, последующие
-коммиты — изменения по ходу выполнения; сохраните историю работы.
+# Внести отличие в 100 копеек и увидеть MISMATCH.
+uv run python scripts/discrepancy.py introduce
+curl 'http://localhost:8080/api/reconcile?period=2026-08'
 
-Репозиторий может быть публичным или приватным. Для приватного заранее
-предоставьте доступ проверяющему; его GitHub-аккаунт уточните у организатора.
-Не публикуйте `.env`, ключи, лицензии и другие секреты.
+# Восстановить значение или повторить импорт.
+uv run python scripts/discrepancy.py restore
+```
 
-Для сдачи отправьте:
-- ссылку на свой GitHub-репозиторий и SHA финального коммита;
-- README с командами запуска и проверок;
-- код, тесты, отчёт и остальные артефакты из условия задания.
+Ожидаемые итоги августа 2026: 3 начисления и `1 140 000` копеек.
 
-Одного ZIP-архива или patch вместо GitHub-репозитория недостаточно.
+CLI с отдельным пользователем PostgreSQL только для чтения:
+
+```bash
+docker compose run --rm \
+  -e DATABASE_URL=postgresql://agent_reader:demo-reader-local@postgres:5432/reporting \
+  api uv run --frozen --no-dev python -m source.cli --period 2026-08
+```
+
+CLI завершает работу с кодом `0` для `MATCH` и `1` для `MISMATCH`.
+
+## Проверки
+
+```bash
+uv sync --frozen
+uv run ruff check source tests scripts
+uv run pytest
+
+cd frontend
+npm ci
+npm test -- --run
+npm run build
+```
+
+## Настоящая 1С
+
+Конфигурация создана в учебной платформе 1С 8.3.27.1606 и содержит:
+
+- справочники `ЛицевыеСчета`, `Начисления`, `Платежи`;
+- HTTP-сервис `ReconciliationAPI` с GET `/accounts`, `/charges`, `/payments`;
+- роль `APIReadOnly` с чтением и просмотром трёх справочников;
+- роль `FullAccess` для отдельного администратора.
+
+Исходники конфигурации находятся в `onec/configuration`. Локальная файловая база,
+выгрузка `.dt`, лицензии и учётные данные исключены из Git.
+
+Текущая учебная установка macOS не содержит модуля расширения веб-сервера, поэтому
+реальная HTTP-публикация и `scripts/preflight.py --real` пока имеют статус `BLOCKED`.
+Это не подменяется успешным прогоном через mock. Для финального интеграционного прогона
+конфигурацию нужно загрузить в официальную платформу с компонентом веб-публикации на
+Windows/Linux либо в полноценную macOS-установку с поддерживаемым веб-сервером.
+
+После публикации заполните `ONEC_BASE_URL`, `ONEC_USER`, `ONEC_PASSWORD` в локальном
+`.env` и выполните:
+
+```bash
+uv run --env-file .env python scripts/preflight.py --real
+```
+
+Подробнее о mapping и восстановлении: [onec/README.md](onec/README.md) и
+[ONEC_SETUP.md](ONEC_SETUP.md).
