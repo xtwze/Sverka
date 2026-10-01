@@ -1,0 +1,107 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<MetaDataObject xmlns="http://v8.1c.ru/8.3/MDClasses" xmlns:app="http://v8.1c.ru/8.2/managed-application/core" xmlns:cfg="http://v8.1c.ru/8.1/data/enterprise/current-config" xmlns:cmi="http://v8.1c.ru/8.2/managed-application/cmi" xmlns:ent="http://v8.1c.ru/8.1/data/enterprise" xmlns:lf="http://v8.1c.ru/8.2/managed-application/logform" xmlns:style="http://v8.1c.ru/8.1/data/ui/style" xmlns:sys="http://v8.1c.ru/8.1/data/ui/fonts/system" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:v8ui="http://v8.1c.ru/8.1/data/ui" xmlns:web="http://v8.1c.ru/8.1/data/ui/colors/web" xmlns:win="http://v8.1c.ru/8.1/data/ui/colors/windows" xmlns:xen="http://v8.1c.ru/8.3/xcf/enums" xmlns:xpr="http://v8.1c.ru/8.3/xcf/predef" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.20">
+	<HTTPService uuid="e24b3460-56a0-4a85-90df-9d3b323ef869">
+		<Properties>
+			<Name>ReconciliationAPI</Name>
+			<Synonym>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>API сверки</v8:content>
+				</v8:item>
+			</Synonym>
+			<Comment/>
+			<RootURL>api</RootURL>
+			<ReuseSessions>AutoUse</ReuseSessions>
+			<SessionMaxAge>20</SessionMaxAge>
+		</Properties>
+		<ChildObjects>
+			<URLTemplate uuid="ba64025c-7b55-4a58-99c2-7d3399ccddac">
+				<Properties>
+					<Name>Accounts</Name>
+					<Synonym>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Accounts</v8:content>
+						</v8:item>
+					</Synonym>
+					<Comment/>
+					<Template>/accounts</Template>
+				</Properties>
+				<ChildObjects>
+					<Method uuid="36bef5b0-2b41-4225-97e4-b79795c78302">
+						<Properties>
+							<Name>GetAccounts</Name>
+							<Synonym>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Get accounts</v8:content>
+								</v8:item>
+							</Synonym>
+							<Comment/>
+							<HTTPMethod>GET</HTTPMethod>
+							<Handler>GetAccounts</Handler>
+						</Properties>
+					</Method>
+				</ChildObjects>
+			</URLTemplate>
+			<URLTemplate uuid="2d9718ab-76db-43cd-9cc8-efd37734585f">
+				<Properties>
+					<Name>Charges</Name>
+					<Synonym>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Charges</v8:content>
+						</v8:item>
+					</Synonym>
+					<Comment/>
+					<Template>/charges</Template>
+				</Properties>
+				<ChildObjects>
+					<Method uuid="317c49e9-bbdf-4239-bd06-89bf13130af5">
+						<Properties>
+							<Name>GetCharges</Name>
+							<Synonym>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Get charges</v8:content>
+								</v8:item>
+							</Synonym>
+							<Comment/>
+							<HTTPMethod>GET</HTTPMethod>
+							<Handler>GetCharges</Handler>
+						</Properties>
+					</Method>
+				</ChildObjects>
+			</URLTemplate>
+			<URLTemplate uuid="2c1317dc-c407-4152-9968-30c57bce4958">
+				<Properties>
+					<Name>Payments</Name>
+					<Synonym>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Payments</v8:content>
+						</v8:item>
+					</Synonym>
+					<Comment/>
+					<Template>/payments</Template>
+				</Properties>
+				<ChildObjects>
+					<Method uuid="c5f24dca-76a3-48f1-b59e-51cd7a1375b5">
+						<Properties>
+							<Name>GetPayments</Name>
+							<Synonym>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Get payments</v8:content>
+								</v8:item>
+							</Synonym>
+							<Comment/>
+							<HTTPMethod>GET</HTTPMethod>
+							<Handler>GetPayments</Handler>
+						</Properties>
+					</Method>
+				</ChildObjects>
+			</URLTemplate>
+		</ChildObjects>
+	</HTTPService>
+</MetaDataObject>

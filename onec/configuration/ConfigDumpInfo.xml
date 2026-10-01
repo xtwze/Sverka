@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<ConfigDumpInfo xmlns="http://v8.1c.ru/8.3/xcf/dumpinfo" xmlns:xen="http://v8.1c.ru/8.3/xcf/enums" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" format="Hierarchical" version="2.20">
+	<ConfigVersions>
+		<Metadata name="Catalog.ЛицевыеСчета" id="b6c8d6f5-a6b0-486b-87dc-aee62df9a89b" configVersion="c15b1db219806a4897602060f5c7f43e00000000">
+			<Metadata name="Catalog.ЛицевыеСчета.Attribute.ВнешнийID" id="247eb08d-2211-4732-a0df-d07d52887642"/>
+			<Metadata name="Catalog.ЛицевыеСчета.Attribute.НомерСчета" id="ec251a37-f8c8-4cd5-ab14-531bfa7e550f"/>
+		</Metadata>
+		<Metadata name="Catalog.Начисления" id="b846d89a-2bd1-41ae-957c-90a99c4309a2" configVersion="ab5ee7a430db3846b0b9f168c0e2027200000000">
+			<Metadata name="Catalog.Начисления.Attribute.ВнешнийID" id="10a62d5f-6a7c-4871-b532-c359322a0b8e"/>
+			<Metadata name="Catalog.Начисления.Attribute.Период" id="3bbe3af8-90b3-4155-be2e-debc5e5b37df"/>
+			<Metadata name="Catalog.Начисления.Attribute.ЛицевойСчет" id="80f83868-9ee6-4d21-84f1-9eb2c2b4e2dc"/>
+			<Metadata name="Catalog.Начисления.Attribute.СуммаКопеек" id="be223f84-b70d-4ef0-a1b8-73c58d9a592c"/>
+		</Metadata>
+		<Metadata name="Catalog.Платежи" id="211d07e3-936f-4d37-88d1-5e7829c846b0" configVersion="15d50aa101b8d140aae5a9a7214e74cf00000000">
+			<Metadata name="Catalog.Платежи.Attribute.ВнешнийID" id="4f22b016-74ec-4e13-a8a4-e1f649d7fe77"/>
+			<Metadata name="Catalog.Платежи.Attribute.ЛицевойСчет" id="a4e26e47-1104-4f8c-9ab1-bdf25eb12ae6"/>
+			<Metadata name="Catalog.Платежи.Attribute.ДатаПлатежа" id="a5ffd030-1586-417f-a549-573102267cd6"/>
+			<Metadata name="Catalog.Платежи.Attribute.СуммаКопеек" id="f5f4367c-3d99-4929-91e0-861148c85b74"/>
+		</Metadata>
+		<Metadata name="Configuration.Конфигурация" id="2258bea3-b621-4fc1-b0b5-007d4bf58c00" configVersion="401401e13254db4582bf2a8b704a6ac500000000"/>
+		<Metadata name="HTTPService.ReconciliationAPI" id="e24b3460-56a0-4a85-90df-9d3b323ef869" configVersion="3dd8b49913159e4f9b2ce5d193d38a5f00000000">
+			<Metadata name="HTTPService.ReconciliationAPI.URLTemplate.Payments" id="2c1317dc-c407-4152-9968-30c57bce4958"/>
+			<Metadata name="HTTPService.ReconciliationAPI.URLTemplate.Charges" id="2d9718ab-76db-43cd-9cc8-efd37734585f"/>
+			<Metadata name="HTTPService.ReconciliationAPI.URLTemplate.Charges.Method.GetCharges" id="317c49e9-bbdf-4239-bd06-89bf13130af5"/>
+			<Metadata name="HTTPService.ReconciliationAPI.URLTemplate.Accounts.Method.GetAccounts" id="36bef5b0-2b41-4225-97e4-b79795c78302"/>
+			<Metadata name="HTTPService.ReconciliationAPI.URLTemplate.Accounts" id="ba64025c-7b55-4a58-99c2-7d3399ccddac"/>
+			<Metadata name="HTTPService.ReconciliationAPI.URLTemplate.Payments.Method.GetPayments" id="c5f24dca-76a3-48f1-b59e-51cd7a1375b5"/>
+		</Metadata>
+		<Metadata name="HTTPService.ReconciliationAPI.Module" id="e24b3460-56a0-4a85-90df-9d3b323ef869.0" configVersion="a6528e8bff94b847b224823a4fbcb7b200000000"/>
+		<Metadata name="Language.Русский" id="c0033c87-9392-42b4-8e88-e4147c15738b" configVersion="18e0d569c91516419c33f281ddbfcd4400000000"/>
+		<Metadata name="Role.APIReadOnly" id="9f11e6b4-06ec-4cd1-bf75-dbb707e7d5a4" configVersion="2c031d3852a33a4ba5cff04957ba111f00000000"/>
+		<Metadata name="Role.APIReadOnly.Rights" id="9f11e6b4-06ec-4cd1-bf75-dbb707e7d5a4.0" configVersion="5bdaeadab06c104aa3cffc59b66c8f8300000000"/>
+		<Metadata name="Role.FullAccess" id="69ff3bcf-6d5b-400e-9e5d-a13d964f7c71" configVersion="1cf69fe0c7ed43459c5a17fc175e677100000000"/>
+		<Metadata name="Role.FullAccess.Rights" id="69ff3bcf-6d5b-400e-9e5d-a13d964f7c71.0" configVersion="28e06ff9f369be4a90e632341506cae400000000"/>
+	</ConfigVersions>
+</ConfigDumpInfo>

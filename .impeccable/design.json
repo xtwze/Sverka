@@ -1,0 +1,112 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-01T02:08:25.849387+00:00",
+  "title": "Design System: Сверка данных",
+  "extensions": {
+    "shadows": [],
+    "motion": [
+      {
+        "name": "control-transition",
+        "value": "0.18s",
+        "purpose": "Переход фона, цвета и границы кнопок."
+      },
+      {
+        "name": "spinner",
+        "value": "1s linear infinite",
+        "purpose": "Индикатор ожидания."
+      },
+      {
+        "name": "skeleton",
+        "value": "1.4s ease-in-out infinite alternate",
+        "purpose": "Пульсация заполнителей."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "wide",
+        "value": "1500px"
+      },
+      {
+        "name": "compact-desktop",
+        "value": "1100px"
+      },
+      {
+        "name": "tablet",
+        "value": "800px"
+      },
+      {
+        "name": "mobile",
+        "value": "600px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Основная кнопка",
+      "kind": "button",
+      "description": "Запуск сверки.",
+      "html": "<button class=\"ds-primary\">Запустить сверку</button>",
+      "css": ".ds-primary{font-family:\"Onest Variable\",Onest,sans-serif;display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:46px;border-radius:8px;padding:0 18px;font-size:13px;font-weight:570;border:1px solid transparent;cursor:pointer;transition:background .18s,color .18s,border-color .18s;background:var(--primary,#365bd6);color:white}.ds-primary:hover{background:var(--primary-hover,#2947ac)}.ds-primary:focus-visible{outline:3px solid var(--primary,#365bd6);outline-offset:4px;}.ds-primary:disabled{opacity:.52;cursor:not-allowed}",
+      "refersTo": "button-primary"
+    },
+    {
+      "name": "Вторичная кнопка",
+      "kind": "button",
+      "description": "Импорт или повторная попытка.",
+      "html": "<button class=\"ds-secondary\">Импортировать</button>",
+      "css": ".ds-secondary{font-family:\"Onest Variable\",Onest,sans-serif;display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:46px;border-radius:8px;padding:0 18px;font-size:13px;font-weight:570;border:1px solid transparent;cursor:pointer;transition:background .18s,color .18s,border-color .18s;background:white;color:var(--ink,#20242c);border-color:#c3c9d6}.ds-secondary:hover{background:#f3f5fa;border-color:var(--primary,#365bd6)}.ds-secondary:focus-visible{outline:3px solid var(--primary,#365bd6);outline-offset:4px;}",
+      "refersTo": "button-secondary"
+    },
+    {
+      "name": "Месяц",
+      "kind": "input",
+      "description": "Выбор периода начислений.",
+      "html": "<label class=\"ds-month\">Период начислений<input type=\"month\" value=\"2026-08\"></label>",
+      "css": ".ds-month{font-family:\"Onest Variable\",Onest,sans-serif;display:block;font-size:12px;font-weight:570}.ds-month input{display:block;margin-top:9px;height:46px;padding:0 13px;background:white;border:1px solid #b8c1d8;border-radius:8px;font:550 14px \"Onest Variable\",Onest,sans-serif;color:var(--ink,#20242c)}.ds-month input:focus-visible{outline:3px solid var(--primary,#365bd6);outline-offset:4px;}",
+      "refersTo": "month-input"
+    },
+    {
+      "name": "Панель отчёта",
+      "kind": "card",
+      "description": "Белый контейнер результатов.",
+      "html": "<section class=\"ds-report\"><h2>Результат сверки</h2><p>Всё готово к проверке</p></section>",
+      "css": ".ds-report{font-family:\"Onest Variable\",Onest,sans-serif;background:white;border:1px solid var(--line,#dfe2e8);border-radius:16px;overflow:hidden;color:var(--ink,#20242c)}.ds-report h2{font-size:17px;font-weight:580;margin:0;padding:25px 26px;border-bottom:1px solid var(--line,#dfe2e8)}.ds-report p{padding:24px 26px;font-size:13px}",
+      "refersTo": "report-panel"
+    },
+    {
+      "name": "Метка статуса",
+      "kind": "chip",
+      "description": "Текстовая метка результата.",
+      "html": "<span class=\"ds-status\">Есть различия</span>",
+      "css": ".ds-status{font-family:\"Onest Variable\",Onest,sans-serif;display:inline-block;color:var(--warning,#805718);font-size:10px;font-weight:580;border:1px solid currentColor;border-radius:5px;padding:5px 7px;white-space:nowrap}"
+    },
+    {
+      "name": "Выбор сценария",
+      "kind": "custom",
+      "description": "Радиокнопка с пояснением.",
+      "html": "<label class=\"ds-scenario\"><input type=\"radio\" checked name=\"demo\"><span><strong>Есть расхождения</strong><small>Пример проверки записей</small></span></label>",
+      "css": ".ds-scenario{font-family:\"Onest Variable\",Onest,sans-serif;display:flex;gap:9px;padding:11px 8px;border:1px solid #b8c5e9;border-radius:8px;background:white;cursor:pointer;transition:background .18s}.ds-scenario:hover{background:#e5e9f2}.ds-scenario input{accent-color:var(--primary,#365bd6);width:15px;height:15px}.ds-scenario input:focus-visible{outline:3px solid var(--primary,#365bd6);outline-offset:4px;}.ds-scenario strong{display:block;font-size:12px;font-weight:550}.ds-scenario small{display:block;margin-top:5px;font-size:10px;line-height:1.5;color:var(--muted,#606775)}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Нейтральный рабочий интерфейс сверки",
+    "overview": "Светлая серая основа, белый отчёт и синий акцент поддерживают спокойное чтение чисел. Плотность умеренная: действия заметны, пояснения подчинены результату. Это документация реализованного React + TypeScript демо, без подключённого backend.",
+    "keyCharacteristics": [
+      "Нейтральная серо-синяя палитра.",
+      "Числа и различия читаются раньше вторичных пояснений.",
+      "Статус обозначен цветом, значком и текстом.",
+      "Демонстрационный режим виден в шапке, боковом блоке и подвале."
+    ],
+    "rules": [],
+    "dos": [
+      "**Do** сохранять читаемые числа, русские подписи и явные состояния.",
+      "**Do** сопровождать цвет статуса текстом и значком.",
+      "**Do** сохранять видимую границу демонстрационного режима."
+    ],
+    "donts": [
+      "**Don't** переносить стиль Cloud Music: пользователь явно его отклонил.",
+      "**Don't** выдавать демонстрационные операции за работу подключённых источников.",
+      "**Don't** добавлять декоративные эффекты, мешающие сравнению записей."
+    ]
+  }
+}

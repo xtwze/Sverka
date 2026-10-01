@@ -13,3 +13,22 @@
 exports/
 **/.playwright-cli/
 output/
+
+# Файлы frontend-прототипа
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+.impeccable/review/
+test-results/
+playwright-report/
+.DS_Store
+
+*.tsbuildinfo
+
+# Локальная копия оригинала и рабочая база 1С
+starter-upstream/
+onec/local/
+*.1CD
+*.lic
