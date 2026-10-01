@@ -1,21 +1,44 @@
-"""Read-only HTTP fixture. This is not 1C and does not implement full OData."""
+"""HTTP API импорта и сверки."""
 
-import json
-from pathlib import Path
+from fastapi import FastAPI, HTTPException, Query
+from fastapi.middleware.cors import CORSMiddleware
 
-from fastapi import FastAPI, HTTPException
+from source.database import Database
+from source.models import SourceContractError
+from source.service import ReconciliationService
+from source.settings import Settings
+from source.source_client import SourceClient, SourceUnavailable
 
-app = FastAPI(title="Interview HTTP fixture (NOT 1C)")
-DATA = json.loads((Path(__file__).parent.parent / "fixtures/data.json").read_text())
+app = FastAPI(title="Reconciliation API", version="1.0")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_methods=["GET", "POST"],
+    allow_headers=["*"],
+)
+
+
+def get_service() -> ReconciliationService:
+    settings = Settings.from_env()
+    return ReconciliationService(SourceClient(settings), Database(settings.database_url))
 
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "source": "mock", "dataset_version": "1"}
+    return {"status": "ok"}
 
 
-@app.get("/{collection}")
-def collection(collection: str):
-    if collection not in DATA:
-        raise HTTPException(404, "Unknown collection")
-    return {"value": DATA[collection]}
+@app.post("/api/import")
+def import_data():
+    try:
+        return get_service().import_data()
+    except (SourceUnavailable, SourceContractError) as error:
+        raise HTTPException(502, str(error)) from error
+
+
+@app.get("/api/reconcile")
+def reconcile(period: str = Query(pattern=r"^\d{4}-(0[1-9]|1[0-2])$")):
+    try:
+        return get_service().reconcile(period)
+    except (SourceUnavailable, SourceContractError) as error:
+        raise HTTPException(502, str(error)) from error

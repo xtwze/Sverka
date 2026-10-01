@@ -8,39 +8,19 @@ import {
   Check,
   CheckCircle,
   WarningCircle,
-  Info,
   CalendarBlank,
   Rows,
-  Flask,
   CircleNotch,
   Plug,
   Minus,
 } from "@phosphor-icons/react";
-import { demoGateway, DEMO_PERIOD, money, monthLabel } from "./demo";
-import type { Report, Scenario } from "./types";
-
-const scenarios: { id: Scenario; title: string; detail: string }[] = [
-  {
-    id: "differences",
-    title: "Два расхождения",
-    detail: "Пропуск записи и изменение суммы",
-  },
-  {
-    id: "match",
-    title: "Данные совпадают",
-    detail: "Одинаковые начисления в источниках",
-  },
-  {
-    id: "unavailable",
-    title: "1С недоступна",
-    detail: "Ошибка получения данных",
-  },
-];
+import { apiGateway } from "./api";
+import { money, monthLabel } from "./demo";
+import type { Report } from "./types";
 
 export default function App() {
-  // На странице хранится выбранный период, сценарий демонстрации и последний ответ.
-  const [period, setPeriod] = useState(DEMO_PERIOD);
-  const [scenario, setScenario] = useState<Scenario>("differences");
+  // На странице хранится выбранный период и последний ответ backend.
+  const [period, setPeriod] = useState("2026-08");
   const [report, setReport] = useState<Report | null>(null);
   const [pending, setPending] = useState<"import" | "reconcile" | null>(null);
   const [notice, setNotice] = useState<{
@@ -67,19 +47,14 @@ export default function App() {
     setReport(null);
     try {
       if (operation === "import") {
-        const result = await demoGateway.importData(
-          scenario,
-          controller.signal,
-        );
-        // В демонстрации импорт восстанавливает исходные данные и убирает расхождения.
-        setScenario("match");
+        const result = await apiGateway.importData(controller.signal);
         setNotice({
           kind: "success",
-          text: `Демо-импорт завершён: ${result.accounts} счёта, ${result.charges} начисления, ${result.payments} платёж. Данные восстановлены. Теперь запустите сверку.`,
+          text: `Импорт завершён: ${result.accounts} счёта, ${result.charges} начисления, ${result.payments} платёж. Теперь запустите сверку.`,
         });
       } else {
         setReport(
-          await demoGateway.reconcile(period, scenario, controller.signal),
+          await apiGateway.reconcile(period, controller.signal),
         );
       }
     } catch (error) {
@@ -113,8 +88,8 @@ export default function App() {
           </div>
           <span className="header-description">Контроль переноса данных</span>
           <span className="demo-badge">
-            <Flask size={15} />
-            Демо-режим
+            <Plug size={15} />
+            API подключён
           </span>
         </div>
       </header>
@@ -264,51 +239,7 @@ export default function App() {
             )}
           </section>
 
-          <aside
-            className="context-rail"
-            aria-label="Демонстрация и порядок работы"
-          >
-            <section className="demo-panel">
-              <div className="aside-heading">
-                <Flask size={19} />
-                <h2>Демонстрационный стенд</h2>
-              </div>
-              <p>
-                Backend ещё не подключён. Все операции выполняются на примерах
-                данных.
-              </p>
-              <fieldset disabled={!!pending}>
-                <legend>Сценарий для проверки</legend>
-                {scenarios.map((item) => (
-                  <label
-                    className={`scenario ${scenario === item.id ? "selected" : ""}`}
-                    key={item.id}
-                  >
-                    <input
-                      type="radio"
-                      name="scenario"
-                      value={item.id}
-                      checked={scenario === item.id}
-                      onChange={() => {
-                        setScenario(item.id);
-                        invalidate();
-                      }}
-                    />
-                    <span>
-                      <strong>{item.title}</strong>
-                      <small>{item.detail}</small>
-                    </span>
-                  </label>
-                ))}
-              </fieldset>
-              <div className="demo-footnote">
-                <Info size={16} />
-                <span>
-                  Расхождения заданы за август 2026. В сентябре — одна запись
-                  без различий.
-                </span>
-              </div>
-            </section>
+          <aside className="context-rail" aria-label="Порядок работы">
             <section className="how-to">
               <h2>Как провести сверку</h2>
               <ol>
@@ -340,9 +271,9 @@ export default function App() {
         <footer className="page-footer">
           <span>
             <Plug size={15} />
-            Интерфейс работает на демо-данных
+            Backend API: localhost:8080
           </span>
-          <span>1С и PostgreSQL пока не подключены</span>
+          <span>Источник → PostgreSQL → сверка</span>
         </footer>
       </main>
     </>
@@ -373,9 +304,19 @@ function Loading({ operation }: { operation: "import" | "reconcile" }) {
       </div>
       <div className="skeleton-line" />
       <div className="skeleton-line" />
-      <p className="loading-note">Демонстрация выполнения операции</p>
+      <p className="loading-note">Операция выполняется на сервере</p>
     </div>
   );
+}
+
+function differenceLabel(type: Report["differences"][number]["type"]): string {
+  const labels = {
+    missing_in_postgres: "Нет в PostgreSQL",
+    extra_in_postgres: "Лишняя запись",
+    amount_mismatch: "Отличается сумма",
+    account_mismatch: "Другой лицевой счёт",
+  };
+  return labels[type];
 }
 
 // Компонент только отображает готовый отчёт: он не сравнивает записи источников.
@@ -402,7 +343,7 @@ function ReportView({ report, retry }: { report: Report; retry: () => void }) {
               ? "Сверка не завершена"
               : matched
                 ? "Расхождений нет"
-                : "Найдено 2 расхождения"}
+                : `Найдено расхождений: ${report.differences.length}`}
           </h3>
           <p>
             {failed
@@ -411,7 +352,7 @@ function ReportView({ report, retry }: { report: Report; retry: () => void }) {
                 ? "В обоих источниках нет начислений за выбранный месяц."
                 : matched
                   ? "Все записи и суммы за выбранный месяц совпадают."
-                  : "Одна запись отсутствует, у другой отличается сумма."}
+                  : "Проверьте каждую запись в таблице ниже."}
           </p>
         </div>
         <span className="status-tag">
@@ -432,9 +373,6 @@ function ReportView({ report, retry }: { report: Report; retry: () => void }) {
             <ArrowClockwise size={18} />
             Повторить сверку
           </button>
-          <small>
-            В демо выберите другой сценарий, чтобы восстановить доступ.
-          </small>
         </div>
       ) : (
         <>
@@ -497,7 +435,7 @@ function ReportView({ report, retry }: { report: Report; retry: () => void }) {
                 </strong>
                 <p>
                   {empty
-                    ? "В демо данные есть за август и сентябрь 2026 года."
+                    ? "За выбранный месяц начисления отсутствуют."
                     : "Отсутствующих записей и различий в суммах не найдено."}
                 </p>
               </div>
@@ -536,9 +474,7 @@ function ReportView({ report, retry }: { report: Report; retry: () => void }) {
                         <span
                           className={`difference-type ${diff.type === "missing_in_postgres" ? "missing" : "amount"}`}
                         >
-                          {diff.type === "missing_in_postgres"
-                            ? "Нет в PostgreSQL"
-                            : "Отличается сумма"}
+                          {differenceLabel(diff.type)}
                         </span>
                       </td>
                       <td className="numeric">
@@ -569,7 +505,7 @@ function ReportView({ report, retry }: { report: Report; retry: () => void }) {
       <div className="run-meta">
         <span>ID запуска</span>
         <code>{report.run_id}</code>
-        <span className="demo-report-label">Демо-отчёт</span>
+        <span className="demo-report-label">Отчёт API</span>
       </div>
     </div>
   );

@@ -1,7 +1,10 @@
-export type Scenario = "match" | "differences" | "unavailable";
 export type Totals = { count: number; total_kopecks: number };
 export type Difference = {
-  type: "missing_in_postgres" | "amount_mismatch";
+  type:
+    | "missing_in_postgres"
+    | "extra_in_postgres"
+    | "amount_mismatch"
+    | "account_mismatch";
   record_id: string;
   account_number: string;
   source_value: number | null;
@@ -24,10 +27,6 @@ export type ImportResult = {
 
 // Контракт для интерфейса. Реальная сверка будет выполняться в Python backend.
 export interface ReconciliationGateway {
-  importData(scenario: Scenario, signal?: AbortSignal): Promise<ImportResult>;
-  reconcile(
-    period: string,
-    scenario: Scenario,
-    signal?: AbortSignal,
-  ): Promise<Report>;
+  importData(signal?: AbortSignal): Promise<ImportResult>;
+  reconcile(period: string, signal?: AbortSignal): Promise<Report>;
 }
