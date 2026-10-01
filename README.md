@@ -48,6 +48,13 @@ COMPOSE_BAKE=false DOCKER_BUILDKIT=0 docker compose up -d --build --wait
 - mock-источник: <http://localhost:8093>;
 - PostgreSQL: `localhost:5543/reporting`.
 
+На той же странице есть чат по выбранному месяцу. Для него задайте `LLM_API`
+в `.env` и пересоздайте API: `docker compose up -d --build api frontend`.
+Браузер отправляет вопрос в `POST /api/agent/chat`; сервер вызывает только
+read-only инструменты сверки начислений и сводки платежей за выбранный месяц,
+затем передаёт результаты модели. API-ключ остаётся на сервере. Данные отчёта
+уходят внешнему провайдеру при отправке вопроса.
+
 ## Проверка сценария
 
 ```bash
@@ -57,15 +64,18 @@ curl 'http://localhost:8080/api/reconcile?period=2026-08'
 # Повторный импорт возвращает те же количества и не создаёт дубликаты.
 curl -X POST http://localhost:8080/api/import
 
-# Внести отличие в 100 копеек и увидеть MISMATCH.
+# Внести два отличия: +100 копеек у charge-2 и удалить charge-3 из PostgreSQL.
 uv run python scripts/discrepancy.py introduce
 curl 'http://localhost:8080/api/reconcile?period=2026-08'
 
-# Восстановить значение или повторить импорт.
+# Восстановить обе записи из неизменённых фикстур.
 uv run python scripts/discrepancy.py restore
 ```
 
 Ожидаемые итоги августа 2026: 3 начисления и `1 140 000` копеек.
+После `introduce` отчёт должен показать `amount_mismatch` для `charge-2`
+(`24950` против `25050`) и `missing_in_postgres` для `charge-3`
+(`990000` против `null`). После `restore` статус снова `MATCH`.
 
 CLI с отдельным пользователем PostgreSQL только для чтения:
 
@@ -76,6 +86,11 @@ docker compose run --rm \
 ```
 
 CLI завершает работу с кодом `0` для `MATCH` и `1` для `MISMATCH`.
+
+Read-only инструменты CLI-агента для отдельного чтения источника, PostgreSQL и
+запуска той же сверки описаны в [docs/AGENT_DESIGN.md](docs/AGENT_DESIGN.md).
+Два навыка находятся в `skills/`, а проверенные примеры их применения и
+ограничения — в [AI_USAGE.md](AI_USAGE.md).
 
 ## Проверки
 

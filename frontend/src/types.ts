@@ -24,9 +24,11 @@ export type ImportResult = {
   charges: number;
   payments: number;
 };
+export type ChatReply = { answer: string };
 
 // Контракт для интерфейса. Реальная сверка будет выполняться в Python backend.
 export interface ReconciliationGateway {
   importData(signal?: AbortSignal): Promise<ImportResult>;
   reconcile(period: string, signal?: AbortSignal): Promise<Report>;
+  chat(message: string, period: string, signal?: AbortSignal): Promise<ChatReply>;
 }

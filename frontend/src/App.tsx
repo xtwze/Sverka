@@ -13,6 +13,8 @@ import {
   CircleNotch,
   Plug,
   Minus,
+  ChatCircleText,
+  PaperPlaneTilt,
 } from "@phosphor-icons/react";
 import { apiGateway } from "./api";
 import { money, monthLabel } from "./demo";
@@ -28,14 +30,52 @@ export default function App() {
     text: string;
   } | null>(null);
   const request = useRef<AbortController | null>(null);
+  const chatRequest = useRef<AbortController | null>(null);
+  const [question, setQuestion] = useState("");
+  const [chatPending, setChatPending] = useState(false);
+  const [chatError, setChatError] = useState<string | null>(null);
+  const [messages, setMessages] = useState<{
+    role: "user" | "assistant";
+    text: string;
+  }[]>([]);
   const validPeriod = /^\d{4}-(0[1-9]|1[0-2])$/.test(period);
   // Отменяем незавершённый запрос, если пользователь закрыл страницу.
-  useEffect(() => () => request.current?.abort(), []);
+  useEffect(() => () => {
+    request.current?.abort();
+    chatRequest.current?.abort();
+  }, []);
 
   // Старый отчёт нельзя показывать как результат для нового периода или сценария.
   function invalidate() {
     setReport(null);
     setNotice(null);
+    chatRequest.current?.abort();
+    setChatPending(false);
+    setMessages([]);
+    setChatError(null);
+  }
+  async function sendQuestion(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const message = question.trim();
+    if (!message || !validPeriod || chatPending) return;
+    const controller = new AbortController();
+    chatRequest.current = controller;
+    setQuestion("");
+    setMessages((current) => [...current, { role: "user", text: message }]);
+    setChatError(null);
+    setChatPending(true);
+    try {
+      const reply = await apiGateway.chat(message, period, controller.signal);
+      if (!controller.signal.aborted) {
+        setMessages((current) => [...current, { role: "assistant", text: reply.answer }]);
+      }
+    } catch (error) {
+      if (!controller.signal.aborted) {
+        setChatError(error instanceof Error ? error.message : "Не удалось получить ответ.");
+      }
+    } finally {
+      if (!controller.signal.aborted) setChatPending(false);
+    }
   }
   // Обе кнопки используют один обработчик, чтобы одинаково показывать загрузку и ошибки.
   async function run(operation: "import" | "reconcile") {
@@ -268,6 +308,38 @@ export default function App() {
             </section>
           </aside>
         </div>
+        <section className="chat-panel" aria-labelledby="chat-title">
+          <div className="chat-heading">
+            <span className="chat-icon"><ChatCircleText size={22} /></span>
+            <div>
+              <h2 id="chat-title">Помощник по сверке</h2>
+              <p>Задайте вопрос о начислениях или платежах за {monthLabel(period)}.</p>
+            </div>
+          </div>
+          <div className="chat-messages" role="log" aria-live="polite" aria-label="Сообщения чата">
+            {messages.length === 0 && (
+              <p className="chat-empty">Например: «Какие расхождения найдены?» или «Сколько было платежей?»</p>
+            )}
+            {messages.map((item, index) => (
+              <div className={`chat-message ${item.role}`} key={index}>
+                <span>{item.role === "user" ? "Вы" : "Помощник"}</span>
+                <p>{item.text}</p>
+              </div>
+            ))}
+            {chatPending && <p className="chat-wait"><CircleNotch className="spin" size={16} /> Сверяем и готовим ответ…</p>}
+          </div>
+          {chatError && <p className="chat-error" role="alert">{chatError}</p>}
+          <form className="chat-form" onSubmit={(event) => void sendQuestion(event)}>
+            <label className="sr-only" htmlFor="chat-question">Вопрос по сверке</label>
+            <input id="chat-question" value={question} maxLength={1000}
+              onChange={(event) => setQuestion(event.target.value)}
+              placeholder="Спросите о результатах сверки…" />
+            <button className="button primary" type="submit" disabled={!question.trim() || !validPeriod || chatPending}>
+              <PaperPlaneTilt size={18} /> Отправить
+            </button>
+          </form>
+          <p className="chat-disclosure">Для ответа результаты сверки передаются внешней модели. Помощник только читает данные.</p>
+        </section>
         <footer className="page-footer">
           <span>
             <Plug size={15} />

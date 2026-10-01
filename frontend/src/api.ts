@@ -1,5 +1,6 @@
 import type {
   ImportResult,
+  ChatReply,
   ReconciliationGateway,
   Report,
 } from "./types";
@@ -28,5 +29,13 @@ export const apiGateway: ReconciliationGateway = {
       `/api/reconcile?period=${encodeURIComponent(period)}`,
       { signal },
     );
+  },
+  chat(message, period, signal) {
+    return request<ChatReply>("/api/agent/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message, period }),
+      signal,
+    });
   },
 };

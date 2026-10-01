@@ -16,6 +16,8 @@ services:
       - "127.0.0.1:${API_PORT:-8080}:8000"
     environment:
       DATABASE_URL: postgresql://importer:demo-importer-local@postgres:5432/reporting
+      AGENT_DATABASE_URL: postgresql://agent_reader:demo-reader-local@postgres:5432/reporting
+      LLM_API: ${LLM_API:-}
       SOURCE_BASE_URL: http://source-mock:8000
     depends_on:
       source-mock:
