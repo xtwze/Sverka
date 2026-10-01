@@ -1,44 +1,16 @@
-"""Типы данных, общие для импорта и сверки."""
+"""Проверка DTO, полученных от внешнего источника."""
 
 import re
-from dataclasses import dataclass
 from datetime import date
 from typing import Any
+
+from source.domain.models import Account, Charge, Payment, SourceSnapshot
 
 PERIOD_PATTERN = re.compile(r"^\d{4}-(0[1-9]|1[0-2])$")
 
 
 class SourceContractError(ValueError):
     """Источник ответил, но нарушил согласованный контракт."""
-
-
-@dataclass(frozen=True)
-class Account:
-    id: str
-    account_number: str
-
-
-@dataclass(frozen=True)
-class Charge:
-    id: str
-    account_id: str
-    period: str
-    amount_kopecks: int
-
-
-@dataclass(frozen=True)
-class Payment:
-    id: str
-    account_id: str
-    date: date
-    amount_kopecks: int
-
-
-@dataclass(frozen=True)
-class SourceSnapshot:
-    accounts: tuple[Account, ...]
-    charges: tuple[Charge, ...]
-    payments: tuple[Payment, ...]
 
 
 def _text(row: dict[str, Any], field: str) -> str:

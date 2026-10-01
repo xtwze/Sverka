@@ -1,0 +1,70 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="PyPackageRequirementsInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredPackages">
+        <list>
+          <option value="aiofiles" />
+          <option value="aiogram" />
+          <option value="aiohappyeyeballs" />
+          <option value="aiohttp" />
+          <option value="aiosignal" />
+          <option value="annotated-types" />
+          <option value="attrs" />
+          <option value="certifi" />
+          <option value="colorama" />
+          <option value="decorator" />
+          <option value="dotenv" />
+          <option value="frozenlist" />
+          <option value="idna" />
+          <option value="ImageIO" />
+          <option value="imageio-ffmpeg" />
+          <option value="loguru" />
+          <option value="magic-filter" />
+          <option value="moviepy" />
+          <option value="multidict" />
+          <option value="numpy" />
+          <option value="packaging" />
+          <option value="pillow" />
+          <option value="proglog" />
+          <option value="propcache" />
+          <option value="pydantic" />
+          <option value="pydantic_core" />
+          <option value="pydub" />
+          <option value="python-dotenv" />
+          <option value="tqdm" />
+          <option value="typing-inspection" />
+          <option value="typing_extensions" />
+          <option value="win32_setctime" />
+          <option value="yarl" />
+          <option value="anyio" />
+          <option value="gigachat" />
+          <option value="h11" />
+          <option value="httpcore" />
+          <option value="httpx" />
+          <option value="jsonpatch" />
+          <option value="jsonpointer" />
+          <option value="langchain-core" />
+          <option value="langchain-gigachat" />
+          <option value="langsmith" />
+          <option value="orjson" />
+          <option value="PyYAML" />
+          <option value="requests" />
+          <option value="requests-toolbelt" />
+          <option value="sniffio" />
+          <option value="tenacity" />
+          <option value="types-requests" />
+          <option value="urllib3" />
+          <option value="zstandard" />
+        </list>
+      </option>
+    </inspection_tool>
+    <inspection_tool class="PyUnresolvedReferencesInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredIdentifiers">
+        <list>
+          <option value="requests" />
+        </list>
+      </option>
+    </inspection_tool>
+  </profile>
+</component>

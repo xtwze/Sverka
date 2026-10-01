@@ -13,9 +13,24 @@
 - `fixtures` — фиксированный набор данных стартового контракта;
 - `scripts` — preflight и контролируемое внесение расхождения.
 
-HTTP API и CLI используют `ReconciliationService`, поэтому правила сравнения не
-дублируются. Импорт сначала получает и проверяет весь снимок источника, затем
+HTTP API и CLI используют один `ReconciliationService`, поэтому правила сравнения не
+дублируются. `ImportService` сначала получает и проверяет весь снимок источника, затем
 сохраняет его одной транзакцией с upsert. Повторный запуск идемпотентен.
+
+Backend разделён на явные слои:
+
+```text
+source/
+├── main.py                         сборка FastAPI-приложения
+├── config/                         настройки и Dependency Injection
+├── controllers/                    HTTP-маршруты
+├── dto/                            входные и выходные контракты
+├── services/                       сценарии импорта и сверки
+├── repositories/                   SQL и работа с PostgreSQL
+├── clients/                        read-only клиент 1С
+├── domain/                         сущности и правила сверки
+└── cli/                            консольный контроллер
+```
 
 ## Запуск
 
@@ -57,7 +72,7 @@ CLI с отдельным пользователем PostgreSQL только д�
 ```bash
 docker compose run --rm \
   -e DATABASE_URL=postgresql://agent_reader:demo-reader-local@postgres:5432/reporting \
-  api uv run --frozen --no-dev python -m source.cli --period 2026-08
+  api uv run --frozen --no-dev python -m source.cli.commands --period 2026-08
 ```
 
 CLI завершает работу с кодом `0` для `MATCH` и `1` для `MISMATCH`.

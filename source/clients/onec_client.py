@@ -1,18 +1,19 @@
-"""Клиент read-only HTTP API 1С или стартового mock-источника."""
+"""Read-only клиент HTTP API 1С или тестового источника."""
 
 from typing import Any
 
 import httpx
 
-from source.models import SourceContractError, SourceSnapshot, parse_snapshot
-from source.settings import Settings
+from source.config.settings import Settings
+from source.domain.models import SourceSnapshot
+from source.dto.source_dto import SourceContractError, parse_snapshot
 
 
 class SourceUnavailable(RuntimeError):
     pass
 
 
-class SourceClient:
+class OneCClient:
     def __init__(self, settings: Settings):
         self.settings = settings
 

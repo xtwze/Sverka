@@ -5,4 +5,4 @@ WORKDIR /app
 COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev --python /usr/local/bin/python
 COPY . .
-CMD ["uv", "run", "--frozen", "--no-dev", "uvicorn", "source.app:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uv", "run", "--frozen", "--no-dev", "uvicorn", "source.main:app", "--host", "0.0.0.0", "--port", "8000"]

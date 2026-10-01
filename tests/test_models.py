@@ -1,6 +1,6 @@
 import pytest
 
-from source.models import SourceContractError, parse_snapshot
+from source.dto.source_dto import SourceContractError, parse_snapshot
 
 
 def test_broken_relation_is_rejected():

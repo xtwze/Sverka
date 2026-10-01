@@ -17,33 +17,37 @@
 
 ТЗ не предписывает названия Python-модулей, ORM, микросервисы или конкретное дерево каталогов.
 
-## Простая предлагаемая структура
+## Структура backend
 
 ```text
-frontend/                 готовый React-прототип, пока демо
-backend/                  следующий этап, пока не создан
-  app/main.py             HTTP-обработчики FastAPI
-  app/source.py           чтение HTTP 1С
-  app/database.py         запросы PostgreSQL
-  app/importer.py         идемпотентное сохранение данных
-  app/reconciliation.py   общая сверка для UI и CLI
-  app/rules.py            дополнительные проверки
-  app/cli.py              команды чтения и сверки для агента
-onec/                     исходники, загрузка фикстур, восстановление 1С
-skills/                   два реально используемых domain-skill, позже
-fixtures/data.json        неизменённые исходные данные
-postgres/                 роли starter; схема приложения будет добавлена отдельно
-scripts/                  preflight starter; позже сценарий порчи и восстановления PG
-tests/                    проверки starter; позже импорт, расхождения, ошибка источника
-compose.yaml              сейчас только PostgreSQL и mock из starter
+source/
+  main.py                         сборка FastAPI и подключение маршрутов
+  config/settings.py             конфигурация из окружения
+  config/dependencies.py         сборка зависимостей сервисов
+  controllers/                   HTTP-входы приложения
+  dto/source_dto.py              проверка контракта источника
+  dto/response_dto.py            модели HTTP-ответов
+  services/import_service.py     транзакционный импорт снимка
+  services/reconciliation_service.py сценарий сверки
+  repositories/                  изолированные запросы PostgreSQL
+  clients/onec_client.py         read-only HTTP-клиент 1С
+  domain/models.py               доменные сущности
+  domain/reconciliation.py       чистые правила сравнения
+  cli/commands.py                консольный вход в сервис сверки
+frontend/                        React-интерфейс
+onec/                            исходники конфигурации 1С
+fixtures/data.json               фиксированный тестовый источник
+postgres/                        роли PostgreSQL
+scripts/                         preflight и контролируемое расхождение
+tests/                           проверки контракта, API и сверки
+compose.yaml                     полный локальный запуск
 ```
 
-Это план структуры, а не утверждение о готовом backend. Очередь, чат, авторизация,
-проводки, CDC и сверка платежей не добавляются.
+Контроллеры не содержат SQL или правил сравнения. Сервисы координируют сценарии,
+репозитории работают с хранилищем, а доменный модуль не зависит от FastAPI и PostgreSQL.
 
 ## История Git
 
 README организатора требует первым коммитом неизменённый starter kit, затем изменения.
-Коммитов и удалённого репозитория пока нет. При подготовке первого коммита нужно
-включить только исходные файлы fullstack с оригинальным .gitignore; после него —
-frontend и нашу документацию. Копия starter-upstream не предназначена для публикации.
+Первый коммит содержит неизменённый starter kit; последующие коммиты содержат
+реализацию приложения. Копия starter-upstream не предназначена для публикации.

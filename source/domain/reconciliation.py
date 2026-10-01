@@ -1,8 +1,8 @@
-"""Чистая бизнес-логика сверки начислений."""
+"""Чистые доменные правила сверки начислений."""
 
 from uuid import uuid4
 
-from source.models import Charge
+from source.domain.models import Charge
 
 
 def reconcile_charges(
@@ -44,11 +44,11 @@ def reconcile_charges(
         "status": "MATCH" if not differences else "MISMATCH",
         "source": {
             "count": len(source),
-            "total_kopecks": sum(r.amount_kopecks for r in source.values()),
+            "total_kopecks": sum(row.amount_kopecks for row in source.values()),
         },
         "postgres": {
             "count": len(target),
-            "total_kopecks": sum(r.amount_kopecks for r in target.values()),
+            "total_kopecks": sum(row.amount_kopecks for row in target.values()),
         },
         "differences": differences,
     }
