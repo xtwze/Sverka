@@ -23,27 +23,6 @@ WEB_SYSTEM_MESSAGE = (
     "Суммы указаны в копейках. Не придумывай факты, причины или действия. "
     "Если данных для ответа нет, прямо скажи об этом. Отвечай по-русски."
 )
-TOOL_SPEC = {
-    "type": "function",
-    "function": {
-        "name": "reconcile_charges",
-        "description": "Сверить начисления 1С и PostgreSQL за месяц",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "period": {
-                    "type": "string",
-                    "pattern": r"^\d{4}-(0[1-9]|1[0-2])$",
-                    "description": "Месяц в формате YYYY-MM",
-                }
-            },
-            "required": ["period"],
-            "additionalProperties": False,
-        },
-    },
-}
-
-
 class ModelResponseError(RuntimeError):
     """Провайдер вернул неполный или неожиданный ответ."""
 
@@ -68,7 +47,7 @@ class RouterAIAgent:
             "max_tokens": 600,
         }
         if include_tools:
-            body["tools"] = [TOOL_SPEC]
+            body["tools"] = [self.tools.model_spec("reconcile_charges")]
             body["tool_choice"] = "auto"
         response = self.client.post(
             API_URL,

@@ -18,6 +18,7 @@ import {
 } from "@phosphor-icons/react";
 import { apiGateway } from "./api";
 import { money, monthLabel } from "./demo";
+import { MarkdownMessage } from "./MarkdownMessage";
 import type { Report } from "./types";
 
 export default function App() {
@@ -323,7 +324,11 @@ export default function App() {
             {messages.map((item, index) => (
               <div className={`chat-message ${item.role}`} key={index}>
                 <span>{item.role === "user" ? "Вы" : "Помощник"}</span>
-                <p>{item.text}</p>
+                {item.role === "assistant" ? (
+                  <MarkdownMessage text={item.text} />
+                ) : (
+                  <p>{item.text}</p>
+                )}
               </div>
             ))}
             {chatPending && <p className="chat-wait"><CircleNotch className="spin" size={16} /> Сверяем и готовим ответ…</p>}

@@ -2,6 +2,7 @@ from datetime import date
 from unittest.mock import Mock
 
 import pytest
+from langchain_core.tools import BaseTool
 
 from source.agent.dependencies import get_agent_tools
 from source.agent.tools import AgentTools, ToolInputError, UnknownToolError
@@ -36,6 +37,19 @@ def test_only_allowed_tool_calls_shared_service():
     service.reconcile.assert_called_once_with("2026-08")
     assert result["status"] == "MATCH"
     assert result["source"]["total_kopecks"] == 1140000
+
+
+def test_decorated_tool_schema_is_used_for_model_calls():
+    tools = AgentTools(Mock(), Mock(), Mock(), Mock())
+    assert all(isinstance(item, BaseTool) for item in tools._handlers.values())
+
+    function = tools.model_spec("reconcile_charges")["function"]
+    assert function["name"] == "reconcile_charges"
+    assert function["parameters"]["required"] == ["period"]
+    assert function["parameters"]["additionalProperties"] is False
+    assert set(function["parameters"]["properties"]) == {"period"}
+    with pytest.raises(UnknownToolError):
+        tools.model_spec("import_data")
 
 
 def test_unknown_tool_and_invalid_input_never_reach_service():
