@@ -19,6 +19,9 @@ services:
       AGENT_DATABASE_URL: postgresql://agent_reader:demo-reader-local@postgres:5432/reporting
       LLM_API: ${LLM_API:-}
       SOURCE_BASE_URL: http://source-mock:8000
+      ONEC_BASE_URL: ${ONEC_BASE_URL:-}
+      ONEC_USER: ${ONEC_USER:-}
+      ONEC_PASSWORD: ${ONEC_PASSWORD:-}
     depends_on:
       source-mock:
         condition: service_healthy
