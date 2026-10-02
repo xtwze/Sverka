@@ -68,7 +68,7 @@ export default function App() {
   async function sendQuestion(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const message = question.trim();
-    if (!message || !validPeriod || chatPending) return;
+    if (!message || !validPeriod || chatPending || pending) return;
     const controller = new AbortController();
     chatRequest.current = controller;
     setQuestion("");
@@ -94,8 +94,7 @@ export default function App() {
     const controller = new AbortController();
     request.current = controller;
     setPending(operation);
-    setNotice(null);
-    setReport(null);
+    invalidate();
     try {
       if (operation === "import") {
         const result = await apiGateway.importData(controller.signal);
@@ -251,7 +250,7 @@ export default function App() {
                     ? "Сверка не завершена"
                     : report.status === "MATCH"
                       ? "Расхождений нет"
-                      : "Найдено два расхождения"
+                      : `Найдено расхождений: ${report.differences.length}`
                   : "Сверка ещё не запускалась"}
             </div>
             {pending ? (
@@ -349,7 +348,7 @@ export default function App() {
             <input id="chat-question" value={question} maxLength={1000}
               onChange={(event) => setQuestion(event.target.value)}
               placeholder="Спросите о результатах сверки…" />
-            <button className="button primary" type="submit" disabled={!question.trim() || !validPeriod || chatPending}>
+            <button className="button primary" type="submit" disabled={!question.trim() || !validPeriod || chatPending || !!pending}>
               <PaperPlaneTilt size={18} /> Отправить
             </button>
           </form>

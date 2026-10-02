@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from source.agent.dependencies import get_agent_tools
-from source.agent.routerai import ModelResponseError, RouterAIAgent
+from source.agent.routerai import ModelResponseError, ModelResponseTruncated, RouterAIAgent
 from source.agent.tools import AgentTools
 from source.clients.onec_client import SourceUnavailable
 from source.dto.source_dto import SourceContractError
@@ -41,5 +41,11 @@ def chat(request: ChatRequest, tools: AgentTools = Depends(get_chat_tools)) -> C
         return ChatResponse(answer=agent.ask_for_period(request.message, request.period))
     except (SourceUnavailable, SourceContractError) as error:
         raise HTTPException(502, "Источник данных недоступен. Повторите позже.") from error
+    except ModelResponseTruncated as error:
+        raise HTTPException(
+            502, "Ответ модели превысил ограничение длины. Уточните вопрос или запросите меньше деталей."
+        ) from error
     except (httpx.HTTPError, ModelResponseError) as error:
         raise HTTPException(502, "Не удалось получить ответ модели. Повторите позже.") from error
+    finally:
+        agent.close()

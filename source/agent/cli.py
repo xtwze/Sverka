@@ -13,7 +13,10 @@ def main() -> int:
     parser.add_argument("--json", action="store_true", help="Include tool evidence, without secrets")
     args = parser.parse_args()
     agent = RouterAIAgent.from_env(get_agent_tools())
-    answer = agent.ask(args.question)
+    try:
+        answer = agent.ask(args.question)
+    finally:
+        agent.close()
     if args.json:
         print(json.dumps({"question": args.question, "model": MODEL,
                           "tool_calls": agent.trace, "answer": answer},

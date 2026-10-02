@@ -4,9 +4,21 @@ from unittest.mock import Mock
 import httpx
 import pytest
 
-from source.agent.routerai import ModelResponseError, RouterAIAgent
+from source.agent.routerai import ModelResponseError, ModelResponseTruncated, RouterAIAgent
 from source.agent.tools import AgentTools
 from source.dto.response_dto import ReconciliationResponse
+
+
+def test_agent_closes_its_own_client():
+    agent = RouterAIAgent(Mock(), "test-key")
+    agent.close()
+    assert agent.client.is_closed
+
+
+def test_agent_does_not_close_borrowed_client():
+    with httpx.Client() as client:
+        RouterAIAgent(Mock(), "test-key", client).close()
+        assert not client.is_closed
 
 
 def test_model_can_call_only_registered_tool_and_explain_its_result():
@@ -116,3 +128,21 @@ def test_web_agent_uses_only_server_facts_for_selected_month():
     ]
     assert "tools" not in requests[0]
     assert "payments_summary" in requests[0]["messages"][1]["content"]
+
+
+@pytest.mark.parametrize("include_tools", [False, True])
+def test_truncated_response_is_rejected_before_text_or_tool_calls_are_used(include_tools):
+    def respond(request):
+        assert json.loads(request.content)["max_tokens"] == 4096
+        return httpx.Response(200, json={"choices": [{
+            "finish_reason": "length",
+            "message": {"content": "Найдены расхождения: charge-2"},
+        }]})
+
+    tools = Mock()
+    tools.model_spec.return_value = {"type": "function"}
+    with httpx.Client(transport=httpx.MockTransport(respond)) as client:
+        agent = RouterAIAgent(tools, "test-key", client)
+        with pytest.raises(ModelResponseTruncated):
+            agent._complete([], include_tools=include_tools)
+    tools.invoke.assert_not_called()

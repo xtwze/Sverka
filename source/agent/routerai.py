@@ -39,6 +39,10 @@ class ModelResponseError(RuntimeError):
     """Провайдер вернул неполный или неожиданный ответ."""
 
 
+class ModelResponseTruncated(ModelResponseError):
+    """Ответ остановлен из-за ограничения длины."""
+
+
 class RouterAIAgent:
     def __init__(self, tools: AgentTools, api_key: str, client: httpx.Client | None = None):
         if not api_key:
@@ -46,7 +50,13 @@ class RouterAIAgent:
         self.trace: list[dict[str, Any]] = []
         self.tools = tools
         self.api_key = api_key
-        self.client = client or httpx.Client(timeout=30)
+        self._owns_client = client is None
+        self.client = client if client is not None else httpx.Client(timeout=30)
+
+    def close(self) -> None:
+        """Закрыть собственный клиент; переданным клиентом управляет вызывающий код."""
+        if self._owns_client:
+            self.client.close()
 
     @classmethod
     def from_env(cls, tools: AgentTools) -> "RouterAIAgent":
@@ -57,7 +67,7 @@ class RouterAIAgent:
             "model": MODEL,
             "messages": messages,
             "temperature": 0,
-            "max_tokens": 600,
+            "max_tokens": 4096,
         }
         if include_tools:
             body["tools"] = [self.tools.model_spec("reconcile_charges")]
@@ -69,7 +79,10 @@ class RouterAIAgent:
         )
         response.raise_for_status()
         try:
-            return response.json()["choices"][0]["message"]
+            choice = response.json()["choices"][0]
+            if choice.get("finish_reason") == "length":
+                raise ModelResponseTruncated("Model response exceeded the token limit")
+            return choice["message"]
         except (KeyError, IndexError, TypeError, ValueError) as error:
             raise ModelResponseError("RouterAI returned an invalid response") from error
 
