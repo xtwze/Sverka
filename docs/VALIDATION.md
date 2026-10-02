@@ -8,8 +8,8 @@
 | Проверка | Результат |
 |---|---|
 | `uv run ruff check source tests scripts` | PASS |
-| `uv run python scripts/test_postgres.py` с отдельной PostgreSQL | 50 passed |
-| `uv run pytest -q` без `TEST_DATABASE_URL` | 48 passed, 2 skipped |
+| `uv run python scripts/test_postgres.py` с отдельной PostgreSQL | 57 passed |
+| `uv run pytest -q` без `TEST_DATABASE_URL` | 55 passed, 2 skipped |
 | `cd frontend && npm test -- --run` | 8 passed |
 | `cd frontend && npm run build` | PASS |
 | Сборка и запуск Compose | PASS |
@@ -89,3 +89,25 @@ python3 scripts/verify_demo.py --mode real --output docs/evidence/agent-mismatch
 Второй запускается оператором на локальной демобазе, никогда не передаёт реквизиты
 импортёра агенту и восстанавливает внесённые расхождения даже при ошибке модели.
 Границы доступа владельца хоста описаны в AGENT_DESIGN.md.
+
+## Финальная проверка перед сдачей, 02.10.2026
+
+Проверена реализация коммита `fd4538a1986d83e778cc40fd7142297bad39b354`.
+Последующие изменения этого протокола относятся только к документации.
+
+- Ruff: PASS; Python без отдельной БД: 55 passed, 2 skipped.
+- Полный Python-прогон с одноразовой PostgreSQL: 57 passed, без пропусков.
+- Frontend: 8 passed; TypeScript/Vite production build: PASS.
+- Real-preflight: PASS, 2 счёта, 4 начисления, 1 платёж.
+- Независимые read-only чтения августа: одинаковые ID charge-1, charge-2, charge-3,
+  по 3 записи и 1140000 копеек. Общая сверка: MATCH,
+  run_id `57ae69ed-1ed5-4c9b-afd5-0eb4637f4aa5`.
+- Хеши routerai.py, chat_controller.py и agent/cli.py в работающем агенте
+  совпали с файлами проверенного коммита.
+- Новые проверки покрывают отклонение обрезанного ответа и закрытие HTTP-клиента.
+  Поведение UI при запуске новой операции проверено по коду: предыдущий чат
+  очищается, незавершённый запрос отменяется, отправка во время операции запрещена.
+
+Этот финальный проход не повторяет развёртывание 1С с нуля или внешний вызов модели
+для MISMATCH. Ранее сохранённые real-протоколы остаются отдельными доказательствами
+этих сценариев; текущая read-only сверка и полный набор тестов выполнены заново.
