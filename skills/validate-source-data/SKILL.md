@@ -26,6 +26,12 @@ description: Проверяйте контракт и полноту данны�
 Общий `.env` импортёра агенту не передавайте. В Docker выполняйте команды
 через `docker compose exec -T agent uv run --frozen --no-dev python -m source.cli.agent_tools ...`.
 
+Для mock внутри Docker (учитывается `SOURCE_BASE_URL=http://source-mock:8000`):
+
+```bash
+docker compose exec -T agent uv run --frozen --no-dev python scripts/preflight.py
+```
+
 Для локального mock:
 
 ```bash

@@ -1,0 +1,17 @@
+name: interview-fullstack-tests
+services:
+  postgres:
+    image: postgres:17.4-bookworm@sha256:304ab813518754228f9f792f79d6da36359b82d8ecf418096c636725f8c930ad
+    environment:
+      POSTGRES_DB: reconciliation_tests
+      POSTGRES_USER: test_runner
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "127.0.0.1::5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U test_runner -d reconciliation_tests"]
+      interval: 1s
+      timeout: 3s
+      retries: 30

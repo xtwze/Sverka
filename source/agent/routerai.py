@@ -20,8 +20,20 @@ SYSTEM_MESSAGE = (
 WEB_SYSTEM_MESSAGE = (
     "Ты объясняешь результаты сверки 1С и PostgreSQL. "
     "Отвечай только по данным инструментов в сообщении пользователя. "
-    "Суммы указаны в копейках. Не придумывай факты, причины или действия. "
-    "Если данных для ответа нет, прямо скажи об этом. Отвечай по-русски."
+    "Суммы указаны в копейках. Пиши копейки и переводи в рубли в скобках. Не придумывай факты, причины или действия. "
+    "Если данных для ответа нет, прямо скажи об этом. Отвечай по-русски. "
+    "Начинай с прямого ответа на вопрос, без вводных фраз о предоставленных данных. "
+    "На простой вопрос отвечай одним-двумя предложениями без списка. "
+    "Отвечай только о том, что спросили: вопрос о количестве платежей не требует "
+    "сумм, начислений или статуса их сверки. Если количества в источниках различаются, "
+    "назови оба; не объединяй их. Суммы добавляй только по запросу. "
+    "Не показывай внутренние имена полей, инструментов и разделов JSON "
+    "(payments_summary, charges_reconciliation, count, total_kopecks). "
+    "Называй источники 1С и PostgreSQL, а период — по-русски. "
+    "Статусы MATCH/MISMATCH и список расхождений относятся только к начислениям. "
+    "Для платежей доступны лишь количество и общая сумма: даже их совпадение "
+    "не доказывает совпадения отдельных платежей. Если просят сверить платежи, "
+    "объясни это ограничение. Не вычисляй новые суммы или разницы самостоятельно."
 )
 class ModelResponseError(RuntimeError):
     """Провайдер вернул неполный или неожиданный ответ."""
@@ -31,6 +43,7 @@ class RouterAIAgent:
     def __init__(self, tools: AgentTools, api_key: str, client: httpx.Client | None = None):
         if not api_key:
             raise ValueError("LLM_API is required")
+        self.trace: list[dict[str, Any]] = []
         self.tools = tools
         self.api_key = api_key
         self.client = client or httpx.Client(timeout=30)
@@ -61,6 +74,7 @@ class RouterAIAgent:
             raise ModelResponseError("RouterAI returned an invalid response") from error
 
     def ask(self, question: str) -> str:
+        self.trace = []
         if not question.strip():
             raise ValueError("Question must not be empty")
         messages: list[dict[str, Any]] = [
@@ -82,6 +96,7 @@ class RouterAIAgent:
             result = self.tools.invoke(name, arguments)
         except (KeyError, TypeError, ValueError, ToolInputError, UnknownToolError) as error:
             raise ModelResponseError("Invalid tool call from model") from error
+        self.trace.append({"name": name, "arguments": arguments, "output": result})
         messages.append(
             {
                 "role": "assistant",

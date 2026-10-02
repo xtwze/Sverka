@@ -12,14 +12,27 @@ React + TypeScript, FastAPI и PostgreSQL. Приложение импортир
 
 ## Запуск
 
-Нужны Docker Engine/Desktop и Compose v2. Из корня:
+Нужны Docker Engine/Desktop, Compose v2 и Python 3 для настройки локального окружения. Из корня:
 
 ```bash
-cp .env.example .env
+python3 scripts/setup_local.py
 COMPOSE_BAKE=false DOCKER_BUILDKIT=0 docker compose up -d --build --wait
 ```
 
-Если `.env` уже существует, сохраните его; не заменяйте ключи и настройки шаблоном.
+`setup_local.py` создаёт `.env`, генерирует случайный пароль импортёра и сохраняет
+существующие настройки 1С/модели. Повторный запуск сохраняет пароль. `.env` имеет
+права 0600 и исключён из Git. Пароль не печатается и не входит в образ агента.
+
+При обновлении **уже существующего локального демостенда** со старым паролем:
+
+```bash
+python3 scripts/setup_local.py --rotate-existing
+COMPOSE_BAKE=false DOCKER_BUILDKIT=0 docker compose up -d --build --wait
+```
+
+Команда меняет пароль роли в работающей PostgreSQL, не удаляя данные, и обновляет
+локальный `.env`; сразу после неё пересоздайте сервисы второй командой.
+Эти операции выполняет оператор стенда, не read-only агент.
 Классическая сборка используется для совместимости с кириллицей в пути.
 
 - UI: <http://localhost:5173>;
@@ -60,9 +73,9 @@ curl -fsS -X POST http://localhost:5173/api/import
 Только в локальной **тестовой** PostgreSQL:
 
 ```bash
-uv run --env-file .env python scripts/discrepancy.py introduce
+docker compose exec -T api uv run --frozen --no-dev python scripts/discrepancy.py introduce
 curl -fsS 'http://localhost:5173/api/reconcile?period=2026-08'
-uv run --env-file .env python scripts/discrepancy.py restore
+docker compose exec -T api uv run --frozen --no-dev python scripts/discrepancy.py restore
 curl -fsS 'http://localhost:5173/api/reconcile?period=2026-08'
 ```
 
@@ -70,6 +83,21 @@ curl -fsS 'http://localhost:5173/api/reconcile?period=2026-08'
 `missing_in_postgres` у `charge-3` (`990000`/`null`), затем снова `MATCH`.
 Исходник mock/1С скрипт не меняет. После `introduce` всегда выполняйте `restore`.
 Скрипт отказывается вносить расхождения, если исходные две записи уже изменены.
+
+Для законченного протокола с объяснением модели и восстановлением данных:
+
+```bash
+python3 scripts/verify_demo.py --mode real --output docs/evidence/agent-mismatch-real.json
+```
+
+Для mock задайте `--mode mock` и отдельное имя отчёта. Режим должен совпадать с
+настройкой контейнера агента; скрипт проверяет это до изменения данных.
+Оператор запускает скрипт на локальной тестовой базе с исходными fixtures и
+настроенным `LLM_API`. Скрипт применяет навыки валидации и сверки: preflight,
+независимые чтения, MATCH → MISMATCH, вопрос CLI-агенту, затем восстановление
+в `finally` и проверка MATCH. При ошибке модели сохраняет BLOCKED и восстанавливает
+данные; при ошибке восстановления требуется действие оператора. Источник не меняет.
+[Сохранённый real-протокол](docs/evidence/agent-mismatch-real.json).
 
 ## CLI и граница прав агента
 
@@ -100,6 +128,13 @@ uv run --env-file .env.agent python -m source.cli.commands --period 2026-08
 [валидация](skills/validate-source-data/SKILL.md) и
 [сверка](skills/verify-reconciliation-report/SKILL.md).
 
+Образ `agent` собирается отдельной целью Dockerfile: в нём нет настроек импортёра,
+маршрута импорта и скрипта внесения расхождений. Граница прав — разрешённые инструменты
+и роль БД. Она не является sandbox для владельца хоста с Docker/произвольным shell:
+локальный UI/API импорта доступен оператору без авторизации. Такому агенту нельзя
+выдавать доступ к Docker, `.env` или произвольному HTTP; подключайте только три
+read-only CLI-команды. Модель приложения не имеет shell/HTTP-инструментов.
+
 ## Проверки кода
 
 ```bash
@@ -112,7 +147,18 @@ npm test
 npm run build
 ```
 
-Два PostgreSQL-теста пропускаются без `TEST_DATABASE_URL`. Задайте его на
+Полный прогон с автоматическим запуском отдельной временной PostgreSQL:
+
+```bash
+uv run python scripts/test_postgres.py
+```
+
+Он использует `compose.test.yaml`, случайный localhost-порт и временное хранилище;
+после тестов удаляет тестовый контейнер. Приложение и его база не затрагиваются.
+Тестовая PostgreSQL допускает вход без пароля только на время локального прогона;
+не запускайте этот тестовый Compose на общем сервере.
+
+Два PostgreSQL-теста пропускаются при обычном `pytest` без `TEST_DATABASE_URL`. Задайте его на
 **отдельную тестовую базу**, где тестовая роль может создавать схемы. Каждый тест
 создаёт свою схему и удаляет её в `finally`. Проверяются повторный импорт с точным
 сравнением строк и полный цикл внесения/восстановления расхождений. Не используйте

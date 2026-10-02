@@ -8,8 +8,8 @@
 | Проверка | Результат |
 |---|---|
 | `uv run ruff check source tests scripts` | PASS |
-| `uv run pytest -q` с отдельной PostgreSQL | 43 passed |
-| `uv run pytest -q` без `TEST_DATABASE_URL` | 41 passed, 2 skipped |
+| `uv run python scripts/test_postgres.py` с отдельной PostgreSQL | 50 passed |
+| `uv run pytest -q` без `TEST_DATABASE_URL` | 48 passed, 2 skipped |
 | `cd frontend && npm test -- --run` | 8 passed |
 | `cd frontend && npm run build` | PASS |
 | Сборка и запуск Compose | PASS |
@@ -56,3 +56,36 @@ PostgreSQL-тесты создают и удаляют временные схе
 
 Успешный mock-прогон не считается доказательством интеграции с 1С.
 Инструкции восстановления и публикации: [1С в Linux/Docker](../onec/linux/README.md).
+
+## Исправления после ревью, 02.10.2026
+
+- Пароль импортёра убран из кода и Compose, генерируется локально; пароль
+  существующей демобазы заменён без удаления данных. Образ агента собирается
+  отдельно и не содержит настроек/сервиса/маршрута импортёра и discrepancy.py.
+- Проверка работающего контейнера: DATABASE_URL и IMPORTER_PASSWORD отсутствуют;
+  роль agent_reader, transaction_read_only=on, SELECT разрешён,
+  INSERT/UPDATE/DELETE запрещены (проверено через has_table_privilege).
+- Mock-preflight внутри agent: PASS, 2 счёта, 4 начисления, 1 платёж.
+  Это проверка mock, не доказательство интеграции с 1С.
+- [Законченный real-прогон CLI-агента](evidence/agent-mismatch-real.json):
+  preflight, независимые чтения, MATCH → MISMATCH, фактический вызов инструмента
+  моделью, объяснение charge-2 и charge-3, восстановление и MATCH.
+  Исходные записи 1С до/во время/после сценария совпали. Ответ проверен по JSON;
+  упомянутые моделью разницы дополнительно вычислены Python из отчёта:
+  100 копеек по charge-2 и 989900 копеек между общими итогами.
+- `uv run ruff check source tests scripts`: PASS.
+- `uv run pytest -q`: 48 passed, 2 skipped без отдельной PostgreSQL.
+- `uv run python scripts/test_postgres.py`: 50 passed, без пропусков; временная
+  тестовая PostgreSQL удалена после завершения.
+
+Команды воспроизведения:
+
+```bash
+uv run python scripts/test_postgres.py
+python3 scripts/verify_demo.py --mode real --output docs/evidence/agent-mismatch-real.json
+```
+
+Первый сценарий создаёт и удаляет только отдельную временную тестовую PostgreSQL.
+Второй запускается оператором на локальной демобазе, никогда не передаёт реквизиты
+импортёра агенту и восстанавливает внесённые расхождения даже при ошибке модели.
+Границы доступа владельца хоста описаны в AGENT_DESIGN.md.

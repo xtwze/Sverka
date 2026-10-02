@@ -1,0 +1,278 @@
+{
+  "checked_at": "2026-10-02T10:56:59.730836+00:00",
+  "source_mode": "real",
+  "period": "2026-08",
+  "status": "PASS",
+  "skills": [
+    "validate-source-data",
+    "verify-reconciliation-report"
+  ],
+  "preflight": {
+    "status": "PASS",
+    "mode": "real",
+    "counts": {
+      "accounts": 2,
+      "charges": 4,
+      "payments": 1
+    }
+  },
+  "baseline": {
+    "read_onec_charges": {
+      "source": "onec",
+      "period": "2026-08",
+      "count": 3,
+      "total_kopecks": 1140000,
+      "rows": [
+        {
+          "id": "charge-1",
+          "account_id": "acc-alice",
+          "period": "2026-08",
+          "amount_kopecks": 125050
+        },
+        {
+          "id": "charge-2",
+          "account_id": "acc-alice",
+          "period": "2026-08",
+          "amount_kopecks": 24950
+        },
+        {
+          "id": "charge-3",
+          "account_id": "acc-bob",
+          "period": "2026-08",
+          "amount_kopecks": 990000
+        }
+      ]
+    },
+    "read_postgres_charges": {
+      "source": "postgres",
+      "period": "2026-08",
+      "count": 3,
+      "total_kopecks": 1140000,
+      "rows": [
+        {
+          "id": "charge-1",
+          "account_id": "acc-alice",
+          "period": "2026-08",
+          "amount_kopecks": 125050
+        },
+        {
+          "id": "charge-2",
+          "account_id": "acc-alice",
+          "period": "2026-08",
+          "amount_kopecks": 24950
+        },
+        {
+          "id": "charge-3",
+          "account_id": "acc-bob",
+          "period": "2026-08",
+          "amount_kopecks": 990000
+        }
+      ]
+    },
+    "reconcile_charges": {
+      "run_id": "41e27b0b-a2de-4bd5-b907-ed9ef461294b",
+      "period": "2026-08",
+      "status": "MATCH",
+      "source": {
+        "count": 3,
+        "total_kopecks": 1140000
+      },
+      "postgres": {
+        "count": 3,
+        "total_kopecks": 1140000
+      },
+      "differences": [],
+      "source_mode": "real"
+    }
+  },
+  "discrepancy": {
+    "read_onec_charges": {
+      "source": "onec",
+      "period": "2026-08",
+      "count": 3,
+      "total_kopecks": 1140000,
+      "rows": [
+        {
+          "id": "charge-1",
+          "account_id": "acc-alice",
+          "period": "2026-08",
+          "amount_kopecks": 125050
+        },
+        {
+          "id": "charge-2",
+          "account_id": "acc-alice",
+          "period": "2026-08",
+          "amount_kopecks": 24950
+        },
+        {
+          "id": "charge-3",
+          "account_id": "acc-bob",
+          "period": "2026-08",
+          "amount_kopecks": 990000
+        }
+      ]
+    },
+    "read_postgres_charges": {
+      "source": "postgres",
+      "period": "2026-08",
+      "count": 2,
+      "total_kopecks": 150100,
+      "rows": [
+        {
+          "id": "charge-1",
+          "account_id": "acc-alice",
+          "period": "2026-08",
+          "amount_kopecks": 125050
+        },
+        {
+          "id": "charge-2",
+          "account_id": "acc-alice",
+          "period": "2026-08",
+          "amount_kopecks": 25050
+        }
+      ]
+    },
+    "reconcile_charges": {
+      "run_id": "ffc9f01c-add6-4c40-ae2a-19708d396e40",
+      "period": "2026-08",
+      "status": "MISMATCH",
+      "source": {
+        "count": 3,
+        "total_kopecks": 1140000
+      },
+      "postgres": {
+        "count": 2,
+        "total_kopecks": 150100
+      },
+      "differences": [
+        {
+          "type": "amount_mismatch",
+          "record_id": "charge-2",
+          "account_number": "10001",
+          "source_value": 24950,
+          "postgres_value": 25050
+        },
+        {
+          "type": "missing_in_postgres",
+          "record_id": "charge-3",
+          "account_number": "20002",
+          "source_value": 990000,
+          "postgres_value": null
+        }
+      ],
+      "source_mode": "real"
+    }
+  },
+  "agent": {
+    "question": "Сверь начисления за 2026-08. Объясни каждое расхождение: укажи ID, тип и значения с обеих сторон в копейках. Не предполагай причины.",
+    "model": "qwen/qwen3.5-flash-02-23",
+    "tool_calls": [
+      {
+        "name": "reconcile_charges",
+        "arguments": {
+          "period": "2026-08"
+        },
+        "output": {
+          "run_id": "7e26366e-cd44-4389-b310-4407a63f2d68",
+          "period": "2026-08",
+          "status": "MISMATCH",
+          "source": {
+            "count": 3,
+            "total_kopecks": 1140000
+          },
+          "postgres": {
+            "count": 2,
+            "total_kopecks": 150100
+          },
+          "differences": [
+            {
+              "type": "amount_mismatch",
+              "record_id": "charge-2",
+              "account_number": "10001",
+              "source_value": 24950,
+              "postgres_value": 25050
+            },
+            {
+              "type": "missing_in_postgres",
+              "record_id": "charge-3",
+              "account_number": "20002",
+              "source_value": 990000,
+              "postgres_value": null
+            }
+          ],
+          "source_mode": "real"
+        }
+      }
+    ],
+    "answer": "Результат сверки за август 2026 года показывает расхождения:\n\n1. **ID charge-2** (тип `amount_mismatch`):  \n   - В 1С: 24 950 копеек  \n   - В PostgreSQL: 25 050 копеек  \n   Разница: 100 копеек в пользу PostgreSQL.\n\n2. **ID charge-3** (тип `missing_in_postgres`):  \n   - В 1С: 990 000 копеек  \n   - В PostgreSQL: запись отсутствует (null)  \n   Полное отсутствие записи в базе данных.\n\nИтого в 1С начислено на 989 900 копеек больше, чем в PostgreSQL, из-за одной недостающей записи и одного расхождения в сумме."
+  },
+  "restored": {
+    "read_onec_charges": {
+      "source": "onec",
+      "period": "2026-08",
+      "count": 3,
+      "total_kopecks": 1140000,
+      "rows": [
+        {
+          "id": "charge-1",
+          "account_id": "acc-alice",
+          "period": "2026-08",
+          "amount_kopecks": 125050
+        },
+        {
+          "id": "charge-2",
+          "account_id": "acc-alice",
+          "period": "2026-08",
+          "amount_kopecks": 24950
+        },
+        {
+          "id": "charge-3",
+          "account_id": "acc-bob",
+          "period": "2026-08",
+          "amount_kopecks": 990000
+        }
+      ]
+    },
+    "read_postgres_charges": {
+      "source": "postgres",
+      "period": "2026-08",
+      "count": 3,
+      "total_kopecks": 1140000,
+      "rows": [
+        {
+          "id": "charge-1",
+          "account_id": "acc-alice",
+          "period": "2026-08",
+          "amount_kopecks": 125050
+        },
+        {
+          "id": "charge-2",
+          "account_id": "acc-alice",
+          "period": "2026-08",
+          "amount_kopecks": 24950
+        },
+        {
+          "id": "charge-3",
+          "account_id": "acc-bob",
+          "period": "2026-08",
+          "amount_kopecks": 990000
+        }
+      ]
+    },
+    "reconcile_charges": {
+      "run_id": "fd2d7287-a549-40b0-b6c5-822fc9f982e6",
+      "period": "2026-08",
+      "status": "MATCH",
+      "source": {
+        "count": 3,
+        "total_kopecks": 1140000
+      },
+      "postgres": {
+        "count": 3,
+        "total_kopecks": 1140000
+      },
+      "differences": [],
+      "source_mode": "real"
+    }
+  }
+}

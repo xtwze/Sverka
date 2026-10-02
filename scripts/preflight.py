@@ -13,14 +13,14 @@ args = parser.parse_args()
 base = (
     os.getenv("ONEC_BASE_URL", "")
     if args.real
-    else "http://localhost:" + os.getenv("SOURCE_PORT", "8093")
+    else os.getenv("SOURCE_BASE_URL") or "http://localhost:" + os.getenv("SOURCE_PORT", "8093")
 )
 if not base:
     print(
         json.dumps(
             {
                 "status": "BLOCKED",
-                "reason": "Organizer must provide ONEC_BASE_URL and access",
+                "reason": "Configure the read-only ONEC_BASE_URL publication",
             }
         )
     )

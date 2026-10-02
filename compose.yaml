@@ -15,7 +15,7 @@ services:
     ports:
       - "127.0.0.1:${API_PORT:-8080}:8000"
     environment:
-      DATABASE_URL: postgresql://importer:demo-importer-local@postgres:5432/reporting
+      DATABASE_URL: postgresql://importer:${IMPORTER_PASSWORD:?Run python3 scripts/setup_local.py}@postgres:5432/reporting
       SOURCE_BASE_URL: http://source-mock:8000
       ONEC_BASE_URL: ${ONEC_BASE_URL:-}
       ONEC_USER: ${ONEC_USER:-}
@@ -34,7 +34,9 @@ services:
       timeout: 3s
       retries: 20
   agent:
-    build: .
+    build:
+      context: .
+      target: agent
     command: ["uv", "run", "--frozen", "--no-dev", "uvicorn", "source.agent.main:app", "--host", "0.0.0.0", "--port", "8000"]
     ports:
       - "127.0.0.1:${AGENT_PORT:-8081}:8000"
@@ -72,7 +74,7 @@ services:
     environment:
       POSTGRES_DB: reporting
       POSTGRES_USER: importer
-      POSTGRES_PASSWORD: demo-importer-local
+      POSTGRES_PASSWORD: ${IMPORTER_PASSWORD:?Run python3 scripts/setup_local.py}
     ports:
       - "127.0.0.1:${POSTGRES_PORT:-5543}:5432"
     volumes:

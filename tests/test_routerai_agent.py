@@ -58,6 +58,12 @@ def test_model_can_call_only_registered_tool_and_explain_its_result():
     assert requests[1]["messages"][-1]["role"] == "tool"
     assert json.loads(requests[1]["messages"][-1]["content"])["status"] == "MATCH"
     service.reconcile.assert_called_once_with("2026-08")
+    assert agent.trace == [{"name": "reconcile_charges",
+                            "arguments": {"period": "2026-08"},
+                            "output": json.loads(requests[1]["messages"][-1]["content"])}]
+    assert "test-key" not in json.dumps(agent.trace)
+    assert agent.ask("Какой период?") == "Укажите месяц сверки в формате YYYY-MM."
+    assert agent.trace == []
 
 
 def test_model_cannot_invoke_unlisted_operation():

@@ -17,8 +17,9 @@ def get_agent_tools() -> AgentTools:
     database_url = os.getenv("AGENT_DATABASE_URL")
     if not database_url:
         raise RuntimeError("AGENT_DATABASE_URL is required for agent tools")
-    if os.getenv("DATABASE_URL"):
-        raise RuntimeError("Remove DATABASE_URL from the agent environment; use .env.agent")
+    for name in ("DATABASE_URL", "IMPORTER_PASSWORD"):
+        if os.getenv(name):
+            raise RuntimeError(f"Remove {name} from the agent environment; use .env.agent")
     if conninfo_to_dict(database_url).get("user") != "agent_reader":
         raise RuntimeError("Agent tools require the agent_reader database role")
     settings = SourceSettings.from_env()

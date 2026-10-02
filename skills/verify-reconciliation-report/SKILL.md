@@ -31,9 +31,9 @@ uv run --env-file .env.agent python -m source.cli.agent_tools reconcile_charges 
 ```
 
 Для воспроизводимого тестового расхождения примените
-`uv run --env-file .env python scripts/discrepancy.py introduce`, повторите три
+`docker compose exec -T api uv run --frozen --no-dev python scripts/discrepancy.py introduce`, повторите три
 команды, затем обязательно выполните
-`uv run --env-file .env python scripts/discrepancy.py restore`.
+`docker compose exec -T api uv run --frozen --no-dev python scripts/discrepancy.py restore`.
 Запись в PostgreSQL выполняет только отдельный тестовый скрипт с правами импортёра;
 агенту эта команда не предоставляется как инструмент.
 
@@ -51,3 +51,8 @@ uv run --env-file .env.agent python -m source.cli.agent_tools reconcile_charges 
   статус `MATCH` без завершённого чтения обоих источников.
 - Сохраните в отчёте о применении навыка команды, статус, ID расхождений и
   пометку `mock` либо `real` для источника.
+
+Для законченного прогона оператор использует `python3 scripts/verify_demo.py --mode real
+--output docs/evidence/agent-mismatch-real.json` (одной строкой). Скрипт сохраняет
+вопрос, вызов инструмента, ответ модели и восстановленный отчёт. Для mock укажите
+`--mode mock` и отдельный файл. Это сценарий оператора, не инструмент агента.

@@ -109,10 +109,13 @@ def test_agent_requires_separate_database_url(monkeypatch):
         get_agent_tools()
 
 
-def test_agent_refuses_importer_environment(monkeypatch):
+@pytest.mark.parametrize("name", ["DATABASE_URL", "IMPORTER_PASSWORD"])
+def test_agent_refuses_importer_environment(monkeypatch, name):
     monkeypatch.setenv("AGENT_DATABASE_URL", "postgresql://agent_reader:reader@localhost/reporting")
-    monkeypatch.setenv("DATABASE_URL", "postgresql://importer:writer@localhost/reporting")
-    with pytest.raises(RuntimeError, match="Remove DATABASE_URL"):
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    monkeypatch.delenv("IMPORTER_PASSWORD", raising=False)
+    monkeypatch.setenv(name, "writer-secret")
+    with pytest.raises(RuntimeError, match=f"Remove {name}"):
         get_agent_tools()
 
 

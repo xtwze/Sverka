@@ -19,7 +19,9 @@ def test_health():
 
 
 def test_invalid_period_is_rejected_before_reconciliation():
-    response = client.get("/api/reconcile", params={"period": "2026-13"})
+    application = create_app()
+    application.dependency_overrides[get_reconciliation_service] = lambda: None
+    response = TestClient(application).get("/api/reconcile", params={"period": "2026-13"})
     assert response.status_code == 422
 
 

@@ -12,10 +12,10 @@ class Settings(SourceSettings):
 
     @classmethod
     def from_env(cls) -> "Settings":
+        database_url = os.getenv("DATABASE_URL")
+        if not database_url:
+            raise RuntimeError("DATABASE_URL is required for the importer")
         return cls(
             **asdict(SourceSettings.from_env()),
-            database_url=os.getenv(
-                "DATABASE_URL",
-                "postgresql://importer:demo-importer-local@localhost:5543/reporting",
-            ),
+            database_url=database_url,
         )
