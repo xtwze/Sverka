@@ -1,19 +1,26 @@
 """Проверка DTO, полученных от внешнего источника."""
 
-import re
+from collections.abc import Sequence
 from datetime import date
 from typing import Any
 
 from source.domain.models import Account, Charge, Payment, SourceSnapshot
-
-PERIOD_PATTERN = re.compile(r"^\d{4}-(0[1-9]|1[0-2])$")
-
-
-class SourceContractError(ValueError):
-    """Источник ответил, но нарушил согласованный контракт."""
+from source.domain.source_validation import (
+    DEFAULT_SOURCE_RULES,
+    SnapshotRule,
+    validate_snapshot,
+)
+from source.domain.source_validation import (
+    PERIOD_PATTERN as PERIOD_PATTERN,
+)
+from source.domain.source_validation import (
+    SourceContractError as SourceContractError,
+)
 
 
 def _text(row: dict[str, Any], field: str) -> str:
+    if not isinstance(row, dict):
+        raise SourceContractError("Collection items must be objects")
     value = row.get(field)
     if not isinstance(value, str) or not value.strip():
         raise SourceContractError(f"Field {field!r} must be a non-empty string")
@@ -27,8 +34,16 @@ def _kopecks(row: dict[str, Any]) -> int:
     return value
 
 
-def parse_snapshot(payloads: dict[str, list[dict[str, Any]]]) -> SourceSnapshot:
+def parse_snapshot(
+    payloads: dict[str, list[dict[str, Any]]],
+    *, rules: Sequence[SnapshotRule] = DEFAULT_SOURCE_RULES,
+) -> SourceSnapshot:
     try:
+        if not isinstance(payloads, dict):
+            raise SourceContractError("Snapshot must be an object")
+        for name in ("accounts", "charges", "payments"):
+            if not isinstance(payloads.get(name), list):
+                raise SourceContractError(f"{name} must be a list")
         accounts = tuple(
             Account(id=_text(row, "id"), account_number=_text(row, "account_number"))
             for row in payloads["accounts"]
@@ -56,13 +71,6 @@ def parse_snapshot(payloads: dict[str, list[dict[str, Any]]]) -> SourceSnapshot:
             raise
         raise SourceContractError(str(error)) from error
 
-    account_ids = {row.id for row in accounts}
-    for name, rows in (("accounts", accounts), ("charges", charges), ("payments", payments)):
-        ids = [row.id for row in rows]
-        if len(ids) != len(set(ids)):
-            raise SourceContractError(f"Duplicate id in {name}")
-    if any(not PERIOD_PATTERN.fullmatch(row.period) for row in charges):
-        raise SourceContractError("Charge period must use YYYY-MM")
-    if any(row.account_id not in account_ids for row in (*charges, *payments)):
-        raise SourceContractError("Charge or payment references an unknown account")
-    return SourceSnapshot(accounts=accounts, charges=charges, payments=payments)
+    snapshot = SourceSnapshot(accounts=accounts, charges=charges, payments=payments)
+    validate_snapshot(snapshot, rules)
+    return snapshot

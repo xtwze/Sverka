@@ -1,7 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { money, monthLabel } from "./demo";
+import { differenceValue, money, monthLabel, sourceLabel } from "./demo";
 
 describe("Форматирование данных отчёта", () => {
+  it("отличает счёт от суммы и пропущенной записи", () => {
+    expect(differenceValue("acc-bob")).toBe("Счёт acc-bob");
+    expect(differenceValue(101)).toBe("1,01 ₽");
+    expect(differenceValue(null)).toBe("Нет записи");
+  });
+
+  it("не выдаёт mock и неизвестный режим за настоящую 1С", () => {
+    expect(sourceLabel("mock")).toContain("mock");
+    expect(sourceLabel()).toContain("неизвестен");
+  });
   it("не теряет копейки", () => {
     expect(money(125050)).toContain("50 ₽");
   });

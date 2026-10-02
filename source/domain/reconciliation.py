@@ -23,11 +23,18 @@ def reconcile_charges(
             difference_type = "extra_in_postgres"
         elif right is None:
             difference_type = "missing_in_postgres"
-        elif left.account_id != right.account_id:
-            difference_type = "account_mismatch"
-        elif left.amount_kopecks != right.amount_kopecks:
-            difference_type = "amount_mismatch"
         else:
+            # Независимые изменения одной записи должны присутствовать одновременно.
+            for field, kind in (("account_id", "account_mismatch"),
+                                ("amount_kopecks", "amount_mismatch")):
+                if getattr(left, field) != getattr(right, field):
+                    differences.append({
+                        "type": kind,
+                        "record_id": record_id,
+                        "account_number": account_numbers.get(row.account_id, row.account_id),
+                        "source_value": getattr(left, field),
+                        "postgres_value": getattr(right, field),
+                    })
             continue
         differences.append(
             {

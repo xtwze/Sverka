@@ -109,6 +109,23 @@ def test_agent_requires_separate_database_url(monkeypatch):
         get_agent_tools()
 
 
+def test_agent_refuses_importer_environment(monkeypatch):
+    monkeypatch.setenv("AGENT_DATABASE_URL", "postgresql://agent_reader:reader@localhost/reporting")
+    monkeypatch.setenv("DATABASE_URL", "postgresql://importer:writer@localhost/reporting")
+    with pytest.raises(RuntimeError, match="Remove DATABASE_URL"):
+        get_agent_tools()
+
+
+def test_agent_refuses_writer_role_and_does_not_store_writer_settings(monkeypatch):
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    monkeypatch.setenv("AGENT_DATABASE_URL", "postgresql://importer:writer@localhost/reporting")
+    with pytest.raises(RuntimeError, match="agent_reader"):
+        get_agent_tools()
+    monkeypatch.setenv("AGENT_DATABASE_URL", "postgresql://agent_reader:reader@localhost/reporting")
+    tools = get_agent_tools()
+    assert not hasattr(tools._source.settings, "database_url")
+
+
 def test_payment_summary_filters_selected_month_and_uses_reader_connection():
     source = Mock()
     source.fetch_snapshot.return_value = SourceSnapshot(

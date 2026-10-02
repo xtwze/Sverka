@@ -1,0 +1,487 @@
+{
+  "checked_at": "2026-10-02T04:16:44.988929+03:00",
+  "source_mode": "real",
+  "platform": "1C training 8.3.27.1508 Linux x86_64 in Docker",
+  "source_url": "http://127.0.0.1:18083/Sverka/hs/api",
+  "passwords": "unsupported by training edition; loopback-only publication fixed to APIReader",
+  "original_databases_unchanged": true,
+  "imports": [
+    {
+      "accounts": 2,
+      "charges": 4,
+      "payments": 1
+    },
+    {
+      "accounts": 2,
+      "charges": 4,
+      "payments": 1
+    }
+  ],
+  "http_write_checks": [
+    {
+      "method": "POST",
+      "path": "accounts",
+      "status": 405
+    },
+    {
+      "method": "PUT",
+      "path": "accounts",
+      "status": 405
+    },
+    {
+      "method": "DELETE",
+      "path": "accounts",
+      "status": 405
+    },
+    {
+      "method": "POST",
+      "path": "charges",
+      "status": 405
+    },
+    {
+      "method": "PUT",
+      "path": "charges",
+      "status": 405
+    },
+    {
+      "method": "DELETE",
+      "path": "charges",
+      "status": 405
+    },
+    {
+      "method": "POST",
+      "path": "payments",
+      "status": 405
+    },
+    {
+      "method": "PUT",
+      "path": "payments",
+      "status": 405
+    },
+    {
+      "method": "DELETE",
+      "path": "payments",
+      "status": 405
+    }
+  ],
+  "postgres_reader_write_denied": true,
+  "local_1c_reports": {
+    "seed-1.json": {
+      "status": "PASS",
+      "snapshot": {
+        "accounts": [
+          {
+            "id": "acc-alice",
+            "account_number": "10001"
+          },
+          {
+            "id": "acc-bob",
+            "account_number": "20002"
+          }
+        ],
+        "charges": [
+          {
+            "id": "charge-1",
+            "account_id": "acc-alice",
+            "period": "2026-08",
+            "amount_kopecks": 125050
+          },
+          {
+            "id": "charge-2",
+            "account_id": "acc-alice",
+            "period": "2026-08",
+            "amount_kopecks": 24950
+          },
+          {
+            "id": "charge-3",
+            "account_id": "acc-bob",
+            "period": "2026-08",
+            "amount_kopecks": 990000
+          },
+          {
+            "id": "charge-4",
+            "account_id": "acc-alice",
+            "period": "2026-09",
+            "amount_kopecks": 5000
+          }
+        ],
+        "payments": [
+          {
+            "id": "payment-1",
+            "account_id": "acc-alice",
+            "date": "2026-08-20",
+            "amount_kopecks": 100000
+          }
+        ]
+      }
+    },
+    "seed-2.json": {
+      "status": "PASS",
+      "snapshot": {
+        "accounts": [
+          {
+            "id": "acc-alice",
+            "account_number": "10001"
+          },
+          {
+            "id": "acc-bob",
+            "account_number": "20002"
+          }
+        ],
+        "charges": [
+          {
+            "id": "charge-1",
+            "account_id": "acc-alice",
+            "period": "2026-08",
+            "amount_kopecks": 125050
+          },
+          {
+            "id": "charge-2",
+            "account_id": "acc-alice",
+            "period": "2026-08",
+            "amount_kopecks": 24950
+          },
+          {
+            "id": "charge-3",
+            "account_id": "acc-bob",
+            "period": "2026-08",
+            "amount_kopecks": 990000
+          },
+          {
+            "id": "charge-4",
+            "account_id": "acc-alice",
+            "period": "2026-09",
+            "amount_kopecks": 5000
+          }
+        ],
+        "payments": [
+          {
+            "id": "payment-1",
+            "account_id": "acc-alice",
+            "date": "2026-08-20",
+            "amount_kopecks": 100000
+          }
+        ]
+      }
+    },
+    "access.json": {
+      "status": "PASS",
+      "reader": "APIReader",
+      "passwords": "unsupported-training-edition"
+    },
+    "readonly.json": {
+      "status": "PASS",
+      "snapshot": {
+        "accounts": [
+          {
+            "id": "acc-alice",
+            "account_number": "10001"
+          },
+          {
+            "id": "acc-bob",
+            "account_number": "20002"
+          }
+        ],
+        "charges": [
+          {
+            "id": "charge-1",
+            "account_id": "acc-alice",
+            "period": "2026-08",
+            "amount_kopecks": 125050
+          },
+          {
+            "id": "charge-2",
+            "account_id": "acc-alice",
+            "period": "2026-08",
+            "amount_kopecks": 24950
+          },
+          {
+            "id": "charge-3",
+            "account_id": "acc-bob",
+            "period": "2026-08",
+            "amount_kopecks": 990000
+          },
+          {
+            "id": "charge-4",
+            "account_id": "acc-alice",
+            "period": "2026-09",
+            "amount_kopecks": 5000
+          }
+        ],
+        "payments": [
+          {
+            "id": "payment-1",
+            "account_id": "acc-alice",
+            "date": "2026-08-20",
+            "amount_kopecks": 100000
+          }
+        ]
+      },
+      "write_checks": [
+        {
+          "id": "acc-alice",
+          "denied": true,
+          "error": "{ОбщийМодуль.DemoFixtures.Модуль(108)}: Ошибка при вызове метода контекста (Записать): Нарушение прав доступа!"
+        },
+        {
+          "id": "charge-1",
+          "denied": true,
+          "error": "{ОбщийМодуль.DemoFixtures.Модуль(108)}: Ошибка при вызове метода контекста (Записать): Нарушение прав доступа!"
+        },
+        {
+          "id": "payment-1",
+          "denied": true,
+          "error": "{ОбщийМодуль.DemoFixtures.Модуль(108)}: Ошибка при вызове метода контекста (Записать): Нарушение прав доступа!"
+        }
+      ]
+    }
+  },
+  "trace": [
+    {
+      "stage": "baseline",
+      "command": "read_onec_charges --period 2026-08",
+      "output": {
+        "source": "onec",
+        "period": "2026-08",
+        "count": 3,
+        "total_kopecks": 1140000,
+        "rows": [
+          {
+            "id": "charge-1",
+            "account_id": "acc-alice",
+            "period": "2026-08",
+            "amount_kopecks": 125050
+          },
+          {
+            "id": "charge-2",
+            "account_id": "acc-alice",
+            "period": "2026-08",
+            "amount_kopecks": 24950
+          },
+          {
+            "id": "charge-3",
+            "account_id": "acc-bob",
+            "period": "2026-08",
+            "amount_kopecks": 990000
+          }
+        ]
+      }
+    },
+    {
+      "stage": "baseline",
+      "command": "read_postgres_charges --period 2026-08",
+      "output": {
+        "source": "postgres",
+        "period": "2026-08",
+        "count": 3,
+        "total_kopecks": 1140000,
+        "rows": [
+          {
+            "id": "charge-1",
+            "account_id": "acc-alice",
+            "period": "2026-08",
+            "amount_kopecks": 125050
+          },
+          {
+            "id": "charge-2",
+            "account_id": "acc-alice",
+            "period": "2026-08",
+            "amount_kopecks": 24950
+          },
+          {
+            "id": "charge-3",
+            "account_id": "acc-bob",
+            "period": "2026-08",
+            "amount_kopecks": 990000
+          }
+        ]
+      }
+    },
+    {
+      "stage": "baseline",
+      "command": "reconcile_charges --period 2026-08",
+      "output": {
+        "run_id": "e6a8f15a-207e-4860-811f-ea00b2343499",
+        "period": "2026-08",
+        "status": "MATCH",
+        "source": {
+          "count": 3,
+          "total_kopecks": 1140000
+        },
+        "postgres": {
+          "count": 3,
+          "total_kopecks": 1140000
+        },
+        "differences": [],
+        "source_mode": "real"
+      }
+    },
+    {
+      "stage": "discrepancy",
+      "command": "read_onec_charges --period 2026-08",
+      "output": {
+        "source": "onec",
+        "period": "2026-08",
+        "count": 3,
+        "total_kopecks": 1140000,
+        "rows": [
+          {
+            "id": "charge-1",
+            "account_id": "acc-alice",
+            "period": "2026-08",
+            "amount_kopecks": 125050
+          },
+          {
+            "id": "charge-2",
+            "account_id": "acc-alice",
+            "period": "2026-08",
+            "amount_kopecks": 24950
+          },
+          {
+            "id": "charge-3",
+            "account_id": "acc-bob",
+            "period": "2026-08",
+            "amount_kopecks": 990000
+          }
+        ]
+      }
+    },
+    {
+      "stage": "discrepancy",
+      "command": "read_postgres_charges --period 2026-08",
+      "output": {
+        "source": "postgres",
+        "period": "2026-08",
+        "count": 2,
+        "total_kopecks": 150100,
+        "rows": [
+          {
+            "id": "charge-1",
+            "account_id": "acc-alice",
+            "period": "2026-08",
+            "amount_kopecks": 125050
+          },
+          {
+            "id": "charge-2",
+            "account_id": "acc-alice",
+            "period": "2026-08",
+            "amount_kopecks": 25050
+          }
+        ]
+      }
+    },
+    {
+      "stage": "discrepancy",
+      "command": "reconcile_charges --period 2026-08",
+      "output": {
+        "run_id": "6555e97e-14ef-498c-85a8-539042b0353d",
+        "period": "2026-08",
+        "status": "MISMATCH",
+        "source": {
+          "count": 3,
+          "total_kopecks": 1140000
+        },
+        "postgres": {
+          "count": 2,
+          "total_kopecks": 150100
+        },
+        "differences": [
+          {
+            "type": "amount_mismatch",
+            "record_id": "charge-2",
+            "account_number": "10001",
+            "source_value": 24950,
+            "postgres_value": 25050
+          },
+          {
+            "type": "missing_in_postgres",
+            "record_id": "charge-3",
+            "account_number": "20002",
+            "source_value": 990000,
+            "postgres_value": null
+          }
+        ],
+        "source_mode": "real"
+      }
+    },
+    {
+      "stage": "restored",
+      "command": "read_onec_charges --period 2026-08",
+      "output": {
+        "source": "onec",
+        "period": "2026-08",
+        "count": 3,
+        "total_kopecks": 1140000,
+        "rows": [
+          {
+            "id": "charge-1",
+            "account_id": "acc-alice",
+            "period": "2026-08",
+            "amount_kopecks": 125050
+          },
+          {
+            "id": "charge-2",
+            "account_id": "acc-alice",
+            "period": "2026-08",
+            "amount_kopecks": 24950
+          },
+          {
+            "id": "charge-3",
+            "account_id": "acc-bob",
+            "period": "2026-08",
+            "amount_kopecks": 990000
+          }
+        ]
+      }
+    },
+    {
+      "stage": "restored",
+      "command": "read_postgres_charges --period 2026-08",
+      "output": {
+        "source": "postgres",
+        "period": "2026-08",
+        "count": 3,
+        "total_kopecks": 1140000,
+        "rows": [
+          {
+            "id": "charge-1",
+            "account_id": "acc-alice",
+            "period": "2026-08",
+            "amount_kopecks": 125050
+          },
+          {
+            "id": "charge-2",
+            "account_id": "acc-alice",
+            "period": "2026-08",
+            "amount_kopecks": 24950
+          },
+          {
+            "id": "charge-3",
+            "account_id": "acc-bob",
+            "period": "2026-08",
+            "amount_kopecks": 990000
+          }
+        ]
+      }
+    },
+    {
+      "stage": "restored",
+      "command": "reconcile_charges --period 2026-08",
+      "output": {
+        "run_id": "8a3cdaae-aaa2-4f18-9ca0-616ecbd4b81c",
+        "period": "2026-08",
+        "status": "MATCH",
+        "source": {
+          "count": 3,
+          "total_kopecks": 1140000
+        },
+        "postgres": {
+          "count": 3,
+          "total_kopecks": 1140000
+        },
+        "differences": [],
+        "source_mode": "real"
+      }
+    }
+  ]
+}

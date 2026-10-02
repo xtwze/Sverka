@@ -31,4 +31,5 @@ class ReconciliationService:
             account_numbers = self.accounts.numbers(connection)
         account_numbers.update({row.id: row.account_number for row in snapshot.accounts})
         report = reconcile_charges(period, snapshot.charges, postgres_rows, account_numbers)
+        report["source_mode"] = self.source.settings.source_mode
         return ReconciliationResponse.model_validate(report)

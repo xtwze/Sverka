@@ -2,9 +2,14 @@ from unittest.mock import Mock
 
 from fastapi.testclient import TestClient
 
+from source.agent.main import create_app
 from source.agent.routerai import RouterAIAgent
 from source.controllers.chat_controller import get_chat_tools
-from source.main import create_app
+
+
+def test_agent_app_has_no_import_endpoint():
+    client = TestClient(create_app())
+    assert client.post("/api/import").status_code == 404
 
 
 def test_web_chat_passes_selected_period_to_agent(monkeypatch):

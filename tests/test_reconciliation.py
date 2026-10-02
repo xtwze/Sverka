@@ -31,3 +31,26 @@ def test_other_month_is_excluded():
     report = reconcile_charges("2026-08", source, (), {"acc-alice": "10001"})
     assert report["status"] == "MATCH"
     assert report["source"]["count"] == 0
+
+
+def test_account_and_amount_changes_are_reported_independently():
+    report = reconcile_charges(
+        "2026-08", (charge("changed", 100),),
+        (charge("changed", 101, "acc-bob"),),
+        {"acc-alice": "10001", "acc-bob": "20002"},
+    )
+    assert [(row["type"], row["source_value"], row["postgres_value"])
+            for row in report["differences"]] == [
+        ("account_mismatch", "acc-alice", "acc-bob"),
+        ("amount_mismatch", 100, 101),
+    ]
+
+
+def test_account_only_change_includes_both_account_ids():
+    report = reconcile_charges(
+        "2026-08", (charge("changed", 100),),
+        (charge("changed", 100, "acc-bob"),), {},
+    )
+    assert len(report["differences"]) == 1
+    assert report["differences"][0]["source_value"] == "acc-alice"
+    assert report["differences"][0]["postgres_value"] == "acc-bob"

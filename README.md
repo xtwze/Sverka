@@ -1,143 +1,157 @@
 # Сверка начислений 1С → PostgreSQL
 
-Приложение импортирует лицевые счета, начисления и платежи из read-only HTTP API 1С
-в PostgreSQL и сверяет начисления за выбранный месяц. Суммы передаются и хранятся
-целым числом копеек.
+React + TypeScript, FastAPI и PostgreSQL. Приложение импортирует счета, начисления
+и платежи через read-only HTTP JSON, затем сверяет начисления за выбранный месяц.
+Суммы хранятся в целых копейках. UI, CLI и агент используют один
+`ReconciliationService`; арифметику выполняет Python, не модель.
 
-## Состав
-
-- `onec/configuration` — исходники минимальной конфигурации 1С;
-- `source` — FastAPI, импорт, сверка и CLI;
-- `frontend` — React + TypeScript;
-- `postgres` — создание отдельной read-only роли агента;
-- `fixtures` — фиксированный набор данных стартового контракта;
-- `scripts` — preflight и контролируемое внесение расхождения.
-
-HTTP API и CLI используют один `ReconciliationService`, поэтому правила сравнения не
-дублируются. `ImportService` сначала получает и проверяет весь снимок источника, затем
-сохраняет его одной транзакцией с upsert. Повторный запуск идемпотентен.
-
-Backend разделён на явные слои:
-
-```text
-source/
-├── main.py                         сборка FastAPI-приложения
-├── config/                         настройки и Dependency Injection
-├── controllers/                    HTTP-маршруты
-├── dto/                            входные и выходные контракты
-├── services/                       сценарии импорта и сверки
-├── repositories/                   SQL и работа с PostgreSQL
-├── clients/                        read-only клиент 1С
-├── domain/                         сущности и правила сверки
-└── cli/                            консольный контроллер
-```
+**Статус:** проверены HTTP mock и **настоящая 1С 8.3.27.1508 в Linux/Docker**.
+Восстановление базы, повторный импорт, read-only права и цикл MATCH → MISMATCH → MATCH
+прошли. [Протокол](docs/VALIDATION.md), [запуск настоящей 1С](onec/linux/README.md).
+Обычный Compose без настройки `ONEC_BASE_URL` запускает mock; это отдельный режим.
 
 ## Запуск
 
-Требуется Docker Engine/Desktop с Compose v2+.
+Нужны Docker Engine/Desktop и Compose v2. Из корня:
 
 ```bash
 cp .env.example .env
 COMPOSE_BAKE=false DOCKER_BUILDKIT=0 docker compose up -d --build --wait
 ```
 
-Классический режим сборки указан для каталогов, в пути которых есть кириллица.
+Если `.env` уже существует, сохраните его; не заменяйте ключи и настройки шаблоном.
+Классическая сборка используется для совместимости с кириллицей в пути.
 
-- интерфейс: <http://localhost:5173>;
-- backend и OpenAPI: <http://localhost:8080/docs>;
-- mock-источник: <http://localhost:8093>;
+- UI: <http://localhost:5173>;
+- API/OpenAPI: <http://localhost:8080/docs>;
+- изолированный агент/OpenAPI: <http://localhost:8081/docs>;
+- HTTP mock: <http://localhost:8093>;
 - PostgreSQL: `localhost:5543/reporting`.
 
-На той же странице есть чат по выбранному месяцу. Для него задайте `LLM_API`
-в `.env` и пересоздайте API: `docker compose up -d --build api frontend`.
-Браузер отправляет вопрос в `POST /api/agent/chat`; сервер вызывает только
-read-only инструменты сверки начислений и сводки платежей за выбранный месяц,
-затем передаёт результаты модели. API-ключ остаётся на сервере. Данные отчёта
-уходят внешнему провайдеру при отправке вопроса.
+Nginx направляет `/api/agent/` отдельному сервису `agent`, остальные `/api/` —
+в `api`. Браузер использует тот же origin, поэтому изменение `FRONTEND_PORT`
+не требует пересборки адреса API. Режим источника виден в шапке и отчёте.
 
-## Проверка сценария
+Для чата задайте `LLM_API` в локальном `.env`, затем:
 
 ```bash
-curl -X POST http://localhost:8080/api/import
-curl 'http://localhost:8080/api/reconcile?period=2026-08'
-
-# Повторный импорт возвращает те же количества и не создаёт дубликаты.
-curl -X POST http://localhost:8080/api/import
-
-# Внести два отличия: +100 копеек у charge-2 и удалить charge-3 из PostgreSQL.
-uv run python scripts/discrepancy.py introduce
-curl 'http://localhost:8080/api/reconcile?period=2026-08'
-
-# Восстановить обе записи из неизменённых фикстур.
-uv run python scripts/discrepancy.py restore
+docker compose up -d --wait agent
 ```
 
-Ожидаемые итоги августа 2026: 3 начисления и `1 140 000` копеек.
-После `introduce` отчёт должен показать `amount_mismatch` для `charge-2`
-(`24950` против `25050`) и `missing_in_postgres` для `charge-3`
-(`990000` против `null`). После `restore` статус снова `MATCH`.
+Без ключа импорт и сверка работают, а чат сообщает, что модель не настроена.
+Результаты инструментов отправляются внешнему провайдеру только при вопросе в чат.
+API-ключ доступен серверному процессу агента, в браузер не передаётся.
 
-CLI с отдельным пользователем PostgreSQL только для чтения:
+## Сценарий проверки (mock)
+
+Перед импортом примените [навык валидации](skills/validate-source-data/SKILL.md):
 
 ```bash
-docker compose run --rm \
-  -e DATABASE_URL=postgresql://agent_reader:demo-reader-local@postgres:5432/reporting \
-  api uv run --frozen --no-dev python -m source.cli.commands --period 2026-08
+uv sync --frozen
+uv run python scripts/preflight.py
+curl -fsS -X POST http://localhost:5173/api/import
+curl -fsS 'http://localhost:5173/api/reconcile?period=2026-08'
+curl -fsS -X POST http://localhost:5173/api/import
 ```
 
-CLI завершает работу с кодом `0` для `MATCH` и `1` для `MISMATCH`.
+Оба импорта возвращают 2 счёта, 4 начисления и 1 платёж. Август: 3 начисления,
+`1140000` копеек с каждой стороны и `MATCH`. Сентябрьская запись исключается.
 
-Read-only инструменты CLI-агента для отдельного чтения источника, PostgreSQL и
-запуска той же сверки описаны в [docs/AGENT_DESIGN.md](docs/AGENT_DESIGN.md).
-Два навыка находятся в `skills/`, а проверенные примеры их применения и
-ограничения — в [AI_USAGE.md](AI_USAGE.md).
+Только в локальной **тестовой** PostgreSQL:
 
-## Проверки
+```bash
+uv run --env-file .env python scripts/discrepancy.py introduce
+curl -fsS 'http://localhost:5173/api/reconcile?period=2026-08'
+uv run --env-file .env python scripts/discrepancy.py restore
+curl -fsS 'http://localhost:5173/api/reconcile?period=2026-08'
+```
+
+Ожидаются `amount_mismatch` у `charge-2` (`24950`/`25050`) и
+`missing_in_postgres` у `charge-3` (`990000`/`null`), затем снова `MATCH`.
+Исходник mock/1С скрипт не меняет. После `introduce` всегда выполняйте `restore`.
+Скрипт отказывается вносить расхождения, если исходные две записи уже изменены.
+
+## CLI и граница прав агента
+
+Предпочтительный вариант — уже настроенный отдельный контейнер:
+
+```bash
+docker compose exec -T agent uv run --frozen --no-dev python -m source.cli.agent_tools read_onec_charges --period 2026-08
+docker compose exec -T agent uv run --frozen --no-dev python -m source.cli.agent_tools read_postgres_charges --period 2026-08
+docker compose exec -T agent uv run --frozen --no-dev python -m source.cli.agent_tools reconcile_charges --period 2026-08
+docker compose exec -T agent uv run --frozen --no-dev python -m source.agent.cli 'Сверь начисления за 2026-08'
+```
+
+Для CLI на хосте скопируйте `agent.env.example` в **отдельный** `.env.agent`:
+
+```bash
+cp agent.env.example .env.agent
+uv run --env-file .env.agent python -m source.cli.agent_tools reconcile_charges --period 2026-08
+uv run --env-file .env.agent python -m source.cli.commands --period 2026-08
+```
+
+Не передавайте агенту общий `.env` и не экспортируйте `DATABASE_URL` в его shell.
+При наличии этой переменной или иной роли вместо `agent_reader` инструменты
+отказываются работать. `source.cli.commands` возвращает код 0 для `MATCH`, 1 для
+`MISMATCH`; команды `agent_tools` выводят JSON (статус находится в отчёте).
+Подключение импортёра существует только в API/тестовых скриптах.
+Роль `agent_reader` имеет SELECT без INSERT/UPDATE/DELETE и read-only транзакции.
+`agent` не содержит HTTP-маршрута импорта. Skills:
+[валидация](skills/validate-source-data/SKILL.md) и
+[сверка](skills/verify-reconciliation-report/SKILL.md).
+
+## Проверки кода
 
 ```bash
 uv sync --frozen
 uv run ruff check source tests scripts
-uv run pytest
-
+uv run pytest -q
 cd frontend
 npm ci
-npm test -- --run
+npm test
 npm run build
 ```
 
-Тест повторного импорта в `tests/test_import_service.py` использует PostgreSQL и
-по умолчанию пропускается. Для его запуска задайте `TEST_DATABASE_URL` на
-**отдельную тестовую базу**, в которой тестовая роль может создавать схемы.
-Тест создаёт временную схему, сравнивает записи после двух импортов из
-фиксированного mock-снимка и удаляет эту схему. Не указывайте рабочую базу.
-Проверки недоступности источника выполняются без PostgreSQL и входят в обычный
-`uv run pytest`.
+Два PostgreSQL-теста пропускаются без `TEST_DATABASE_URL`. Задайте его на
+**отдельную тестовую базу**, где тестовая роль может создавать схемы. Каждый тест
+создаёт свою схему и удаляет её в `finally`. Проверяются повторный импорт с точным
+сравнением строк и полный цикл внесения/восстановления расхождений. Не используйте
+рабочую базу. [Результаты проверок](docs/VALIDATION.md).
 
-## Настоящая 1С
+Ручная UI smoke-проверка: открыть страницу, убедиться в отметке mock, выбрать
+`2026-08`, запустить сверку, проверить статус, обе суммы, количество и ID запуска.
+Сменить месяц: старый отчёт должен исчезнуть. Ошибка API должна отображаться
+сообщением, а не успешным пустым отчётом.
 
-Конфигурация создана в учебной платформе 1С 8.3.27.1606 и содержит:
+## Как добавить правило
 
-- справочники `ЛицевыеСчета`, `Начисления`, `Платежи`;
-- HTTP-сервис `ReconciliationAPI` с GET `/accounts`, `/charges`, `/payments`;
-- роль `APIReadOnly` с чтением и просмотром трёх справочников;
-- роль `FullAccess` для отдельного администратора.
+В `source/domain/source_validation.py` определите функцию
+`rule(snapshot) -> None`, выбрасывающую `SourceContractError` при нарушении,
+и зарегистрируйте её в `DEFAULT_SOURCE_RULES`. Парсер и `ImportService` менять
+не требуется. [Пример расширения](docs/RULES.md): `unique_account_numbers`
+проверяет ограничение UNIQUE ещё до открытия транзакции.
 
-Исходники конфигурации находятся в `onec/configuration`. Локальная файловая база,
-выгрузка `.dt`, лицензии и учётные данные исключены из Git.
+## Состав
 
-Текущая учебная установка macOS не содержит модуля расширения веб-сервера, поэтому
-реальная HTTP-публикация и `scripts/preflight.py --real` пока имеют статус `BLOCKED`.
-Это не подменяется успешным прогоном через mock. Для финального интеграционного прогона
-конфигурацию нужно загрузить в официальную платформу с компонентом веб-публикации на
-Windows/Linux либо в полноценную macOS-установку с поддерживаемым веб-сервером.
+- `source/controllers`, `services`, `repositories`, `domain` — маршруты,
+  сценарии, SQL и правила; `dto` — входные/выходные контракты;
+- `source/agent` — отдельное приложение и read-only инструменты;
+- `frontend` — одна веб-страница и Nginx;
+- `onec/configuration` — XML/BSL минимальной конфигурации;
+- `scripts/onec_demo.py` — создание новой демобазы и двукратная загрузка фикстур;
+- `fixtures/data.json` — фиксированный источник тестовых данных;
+- `postgres/init.sql` — роль `agent_reader`;
+- `docs/evidence` — результаты команд без ключей и локальных баз.
 
-После публикации заполните `ONEC_BASE_URL`, `ONEC_USER`, `ONEC_PASSWORD` в локальном
-`.env` и выполните:
+Поле `source_mode: real` означает выбранное подключение `ONEC_BASE_URL`,
+а не самостоятельное доказательство успешной интеграции. Для реального прогона
+нужны опубликованная 1С, успешный preflight, импорт, сверка и проверка прав.
 
-```bash
-uv run --env-file .env python scripts/preflight.py --real
-```
+## Документация
 
-Подробнее о mapping и восстановлении: [onec/README.md](onec/README.md) и
-[ONEC_SETUP.md](ONEC_SETUP.md). Для переноса демобазы на Windows и публикации
-HTTP-сервиса есть [пошаговая инструкция](onec/WINDOWS_PUBLICATION.md).
+- [Архитектура](docs/ARCHITECTURE.md) и [read-only агент](docs/AGENT_DESIGN.md).
+- [Конфигурация 1С](onec/README.md) и [запуск Linux/Docker](onec/linux/README.md).
+- [Результаты проверок](docs/VALIDATION.md) и [использование AI](AI_USAGE.md).
+
+Секреты, файлы баз, лицензии и установщики не включаются в Git.
+Образ платформы 1С собирается локально из официального дистрибутива.

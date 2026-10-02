@@ -16,14 +16,24 @@ import {
   ChatCircleText,
   PaperPlaneTilt,
 } from "@phosphor-icons/react";
-import { apiGateway } from "./api";
-import { money, monthLabel } from "./demo";
+import { apiGateway, getSourceInfo } from "./api";
+import { differenceValue, money, monthLabel, sourceLabel } from "./demo";
 import { MarkdownMessage } from "./MarkdownMessage";
 import type { Report } from "./types";
 
 export default function App() {
   // На странице хранится выбранный период и последний ответ backend.
   const [period, setPeriod] = useState("2026-08");
+  const [connectionLabel, setConnectionLabel] = useState("Проверяем подключение…");
+  useEffect(() => {
+    const controller = new AbortController();
+    void getSourceInfo(controller.signal).then((info) => {
+      if (!controller.signal.aborted) setConnectionLabel(sourceLabel(info.mode));
+    }).catch(() => {
+      if (!controller.signal.aborted) setConnectionLabel("API недоступен");
+    });
+    return () => controller.abort();
+  }, []);
   const [report, setReport] = useState<Report | null>(null);
   const [pending, setPending] = useState<"import" | "reconcile" | null>(null);
   const [notice, setNotice] = useState<{
@@ -130,7 +140,7 @@ export default function App() {
           <span className="header-description">Контроль переноса данных</span>
           <span className="demo-badge">
             <Plug size={15} />
-            API подключён
+            {connectionLabel}
           </span>
         </div>
       </header>
@@ -141,7 +151,7 @@ export default function App() {
             <p>Проверьте, что записи и суммы перенесены без расхождений.</p>
           </div>
           <div className="source-route">
-            <span>1С</span>
+            <span>Источник</span>
             <ArrowRight size={18} />
             <span>
               <Database size={17} />
@@ -288,7 +298,7 @@ export default function App() {
                   <span>1</span>
                   <div>
                     <h3>Импортируйте данные</h3>
-                    <p>Перенесите записи из 1С в PostgreSQL.</p>
+                    <p>Перенесите записи источника в PostgreSQL.</p>
                   </div>
                 </li>
                 <li>
@@ -348,7 +358,7 @@ export default function App() {
         <footer className="page-footer">
           <span>
             <Plug size={15} />
-            Backend API: localhost:8080
+            {connectionLabel}
           </span>
           <span>Источник → PostgreSQL → сверка</span>
         </footer>
@@ -458,7 +468,7 @@ function ReportView({ report, retry }: { report: Report; retry: () => void }) {
               <div className="source-title">
                 <span className="source-monogram">1С</span>
                 <div>
-                  <h3>Источник 1С</h3>
+                  <h3>{sourceLabel(report.source_mode)}</h3>
                   <p>Исходные начисления</p>
                 </div>
               </div>
@@ -489,7 +499,7 @@ function ReportView({ report, retry }: { report: Report; retry: () => void }) {
           </div>
           <div className="difference-total">
             <span>
-              Разница итогов <small>1С − PostgreSQL</small>
+              Разница итогов <small>Источник − PostgreSQL</small>
             </span>
             <strong>
               {money(
@@ -533,7 +543,7 @@ function ReportView({ report, retry }: { report: Report; retry: () => void }) {
                     <th scope="col">Запись / счёт</th>
                     <th scope="col">Тип расхождения</th>
                     <th scope="col" className="numeric">
-                      В 1С
+                      В источнике
                     </th>
                     <th scope="col" className="numeric">
                       В PostgreSQL
@@ -542,7 +552,7 @@ function ReportView({ report, retry }: { report: Report; retry: () => void }) {
                 </thead>
                 <tbody>
                   {report.differences.map((diff) => (
-                    <tr key={diff.record_id}>
+                    <tr key={`${diff.record_id}:${diff.type}`}>
                       <td>
                         <code>{diff.record_id}</code>
                         <small>Счёт {diff.account_number}</small>
@@ -555,9 +565,7 @@ function ReportView({ report, retry }: { report: Report; retry: () => void }) {
                         </span>
                       </td>
                       <td className="numeric">
-                        {diff.source_value === null
-                          ? "Нет записи"
-                          : money(diff.source_value)}
+                        {differenceValue(diff.source_value)}
                       </td>
                       <td className="numeric">
                         {diff.postgres_value === null ? (
@@ -567,7 +575,7 @@ function ReportView({ report, retry }: { report: Report; retry: () => void }) {
                           </span>
                         ) : (
                           <strong className="changed-value">
-                            {money(diff.postgres_value)}
+                            {differenceValue(diff.postgres_value)}
                           </strong>
                         )}
                       </td>

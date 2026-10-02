@@ -20,10 +20,14 @@ description: Проверяйте отчёт сверки начислений �
 
 ## Команды
 
+Локальный агент использует `.env.agent` из `agent.env.example`, без `DATABASE_URL`.
+Общий `.env` импортёра агенту не передавайте. В Docker выполняйте команды
+через `docker compose exec -T agent uv run --frozen --no-dev python -m source.cli.agent_tools ...`.
+
 ```bash
-uv run --env-file .env python -m source.cli.agent_tools read_onec_charges --period 2026-08
-uv run --env-file .env python -m source.cli.agent_tools read_postgres_charges --period 2026-08
-uv run --env-file .env python -m source.cli.agent_tools reconcile_charges --period 2026-08
+uv run --env-file .env.agent python -m source.cli.agent_tools read_onec_charges --period 2026-08
+uv run --env-file .env.agent python -m source.cli.agent_tools read_postgres_charges --period 2026-08
+uv run --env-file .env.agent python -m source.cli.agent_tools reconcile_charges --period 2026-08
 ```
 
 Для воспроизводимого тестового расхождения примените

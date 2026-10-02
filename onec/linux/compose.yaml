@@ -1,0 +1,34 @@
+name: fullstack-onec-linux
+services:
+  init:
+    profiles: [setup]
+    image: fullstack-onec-linux:8.3.27.1508
+    platform: linux/amd64
+    working_dir: /workspace
+    command: [sh, /workspace/onec/linux/initialize.sh]
+    volumes:
+      - data:/var/lib/1c
+      - ../configuration:/workspace/onec/configuration:ro
+      - ../../source:/workspace/source:ro
+      - ../../scripts:/workspace/scripts:ro
+      - ../../fixtures:/workspace/fixtures:ro
+      - .:/workspace/onec/linux:ro
+  onec:
+    image: fullstack-onec-linux:8.3.27.1508
+    platform: linux/amd64
+    command: [sh, -ec, "sh /usr/local/bin/onec-publish && exec apache2ctl -D FOREGROUND"]
+    ports:
+      - "127.0.0.1:18083:80"
+    volumes:
+      - data:/var/lib/1c
+      - ./publish.sh:/usr/local/bin/onec-publish:ro
+    healthcheck:
+      test: [CMD, python3, -c, "import urllib.request; urllib.request.urlopen('http://localhost/Sverka/hs/api/accounts', timeout=15).read()"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+      start_period: 60s
+volumes:
+  data:
+    external: true
+    name: fullstack-onec-linux-review-data

@@ -245,6 +245,7 @@
 		</Properties>
 		<ChildObjects>
 			<Language>Русский</Language>
+			<CommonModule>DemoFixtures</CommonModule>
 			<Role>APIReadOnly</Role>
 			<Role>FullAccess</Role>
 			<HTTPService>ReconciliationAPI</HTTPService>

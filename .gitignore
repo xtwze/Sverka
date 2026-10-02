@@ -31,4 +31,8 @@ playwright-report/
 starter-upstream/
 onec/local/
 *.1CD
+*.dt
 *.lic
+*.run
+*.dmg
+onec/distributions/

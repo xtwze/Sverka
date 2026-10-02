@@ -4,5 +4,7 @@ COPY --from=uv /uv /uvx /bin/
 WORKDIR /app
 COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev --python /usr/local/bin/python
-COPY . .
+COPY source ./source
+COPY fixtures/data.json ./fixtures/data.json
+COPY scripts/preflight.py scripts/discrepancy.py ./scripts/
 CMD ["uv", "run", "--frozen", "--no-dev", "uvicorn", "source.main:app", "--host", "0.0.0.0", "--port", "8000"]

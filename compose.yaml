@@ -16,12 +16,38 @@ services:
       - "127.0.0.1:${API_PORT:-8080}:8000"
     environment:
       DATABASE_URL: postgresql://importer:demo-importer-local@postgres:5432/reporting
+      SOURCE_BASE_URL: http://source-mock:8000
+      ONEC_BASE_URL: ${ONEC_BASE_URL:-}
+      ONEC_USER: ${ONEC_USER:-}
+      ONEC_PASSWORD: ${ONEC_PASSWORD:-}
+      ONEC_ACCOUNTS_PATH: ${ONEC_ACCOUNTS_PATH:-accounts}
+      ONEC_CHARGES_PATH: ${ONEC_CHARGES_PATH:-charges}
+      ONEC_PAYMENTS_PATH: ${ONEC_PAYMENTS_PATH:-payments}
+    depends_on:
+      source-mock:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "uv", "run", "--no-dev", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  agent:
+    build: .
+    command: ["uv", "run", "--frozen", "--no-dev", "uvicorn", "source.agent.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    ports:
+      - "127.0.0.1:${AGENT_PORT:-8081}:8000"
+    environment:
       AGENT_DATABASE_URL: postgresql://agent_reader:demo-reader-local@postgres:5432/reporting
       LLM_API: ${LLM_API:-}
       SOURCE_BASE_URL: http://source-mock:8000
       ONEC_BASE_URL: ${ONEC_BASE_URL:-}
       ONEC_USER: ${ONEC_USER:-}
       ONEC_PASSWORD: ${ONEC_PASSWORD:-}
+      ONEC_ACCOUNTS_PATH: ${ONEC_ACCOUNTS_PATH:-accounts}
+      ONEC_CHARGES_PATH: ${ONEC_CHARGES_PATH:-charges}
+      ONEC_PAYMENTS_PATH: ${ONEC_PAYMENTS_PATH:-payments}
     depends_on:
       source-mock:
         condition: service_healthy
@@ -38,6 +64,8 @@ services:
       - "127.0.0.1:${FRONTEND_PORT:-5173}:80"
     depends_on:
       api:
+        condition: service_healthy
+      agent:
         condition: service_healthy
   postgres:
     image: postgres:17.4-bookworm@sha256:304ab813518754228f9f792f79d6da36359b82d8ecf418096c636725f8c930ad

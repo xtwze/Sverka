@@ -20,8 +20,8 @@ class DifferenceResponse(BaseModel):
     type: str
     record_id: str
     account_number: str
-    source_value: int | None
-    postgres_value: int | None
+    source_value: int | str | None
+    postgres_value: int | str | None
 
 
 class ReconciliationResponse(BaseModel):
@@ -31,6 +31,7 @@ class ReconciliationResponse(BaseModel):
     source: ReconciliationSummary
     postgres: ReconciliationSummary
     differences: list[DifferenceResponse]
+    source_mode: Literal["mock", "real", "unknown"] = "unknown"
 
 
 class HealthResponse(BaseModel):

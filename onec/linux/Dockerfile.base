@@ -1,0 +1,19 @@
+# Только окружение. Платформа 1С устанавливается отдельно из официального архива.
+# На Apple silicon собирать с --platform linux/amd64.
+FROM debian:bookworm-slim@sha256:3783cc01769c7b2b1b83a5c5ad96c815348e28ed7da68e2e3687004faa906251
+
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    apache2 ca-certificates locales python3 xvfb xauth \
+    fontconfig fonts-dejavu-core libgtk-3-0 libglib2.0-0 \
+    libx11-6 libxext6 libxrender1 libxi6 libxrandr2 libxinerama1 \
+    libxcursor1 libxcomposite1 libxdamage1 libxtst6 \
+    libasound2 libdbus-1-3 libcurl4 libssl3 libicu72 libkrb5-3 \
+    libgstreamer1.0-0 libgstreamer-plugins-base1.0-0 \
+    && sed -i 's/^# ru_RU.UTF-8 UTF-8/ru_RU.UTF-8 UTF-8/' /etc/locale.gen \
+    && locale-gen \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV LANG=ru_RU.UTF-8 LC_ALL=ru_RU.UTF-8
+WORKDIR /work
+# Образ не запускает HTTP-сервер до установки и настройки 1С.
+CMD ["bash"]

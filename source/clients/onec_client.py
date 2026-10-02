@@ -4,7 +4,7 @@ from typing import Any
 
 import httpx
 
-from source.config.settings import Settings
+from source.config.source_settings import SourceSettings
 from source.domain.models import SourceSnapshot
 from source.dto.source_dto import SourceContractError, parse_snapshot
 
@@ -14,7 +14,7 @@ class SourceUnavailable(RuntimeError):
 
 
 class OneCClient:
-    def __init__(self, settings: Settings):
+    def __init__(self, settings: SourceSettings):
         self.settings = settings
 
     def fetch_snapshot(self) -> SourceSnapshot:
@@ -35,7 +35,10 @@ class OneCClient:
                         params={"$format": "json"},
                     )
                     response.raise_for_status()
-                    rows = response.json()["value"]
+                    payload = response.json()
+                    if not isinstance(payload, dict):
+                        raise SourceContractError(f"{name} response must be an object")
+                    rows = payload["value"]
                     if not isinstance(rows, list):
                         raise SourceContractError(f"{name}.value must be a list")
                     payloads[name] = rows

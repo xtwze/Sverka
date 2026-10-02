@@ -7,8 +7,8 @@ export type Difference = {
     | "account_mismatch";
   record_id: string;
   account_number: string;
-  source_value: number | null;
-  postgres_value: number | null;
+  source_value: number | string | null;
+  postgres_value: number | string | null;
 };
 export type Report = {
   run_id: string;
@@ -18,6 +18,7 @@ export type Report = {
   postgres: Totals | null;
   differences: Difference[];
   error?: string;
+  source_mode?: "mock" | "real" | "unknown";
 };
 export type ImportResult = {
   accounts: number;
@@ -26,7 +27,7 @@ export type ImportResult = {
 };
 export type ChatReply = { answer: string };
 
-// Контракт для интерфейса. Реальная сверка будет выполняться в Python backend.
+// Интерфейс отображает результат единого Python-сервиса сверки.
 export interface ReconciliationGateway {
   importData(signal?: AbortSignal): Promise<ImportResult>;
   reconcile(period: string, signal?: AbortSignal): Promise<Report>;

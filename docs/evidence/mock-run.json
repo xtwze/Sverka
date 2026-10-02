@@ -1,0 +1,293 @@
+{
+  "checked_at": "2026-10-02T02:46:13.141530+03:00",
+  "source_mode": "mock",
+  "database": "isolated temporary PostgreSQL; original reporting database unchanged",
+  "imports": [
+    {
+      "accounts": 2,
+      "charges": 4,
+      "payments": 1
+    },
+    {
+      "accounts": 2,
+      "charges": 4,
+      "payments": 1
+    }
+  ],
+  "reader_write_denied": "ReadOnlySqlTransaction",
+  "reader_privileges_order": [
+    "SELECT",
+    "INSERT",
+    "UPDATE",
+    "DELETE"
+  ],
+  "reader_privileges": {
+    "accounts": [
+      true,
+      false,
+      false,
+      false
+    ],
+    "charges": [
+      true,
+      false,
+      false,
+      false
+    ],
+    "payments": [
+      true,
+      false,
+      false,
+      false
+    ]
+  },
+  "trace": [
+    {
+      "stage": "baseline",
+      "command": "python -m source.cli.agent_tools read_onec_charges --period 2026-08",
+      "output": {
+        "source": "onec",
+        "period": "2026-08",
+        "count": 3,
+        "total_kopecks": 1140000,
+        "rows": [
+          {
+            "id": "charge-1",
+            "account_id": "acc-alice",
+            "period": "2026-08",
+            "amount_kopecks": 125050
+          },
+          {
+            "id": "charge-2",
+            "account_id": "acc-alice",
+            "period": "2026-08",
+            "amount_kopecks": 24950
+          },
+          {
+            "id": "charge-3",
+            "account_id": "acc-bob",
+            "period": "2026-08",
+            "amount_kopecks": 990000
+          }
+        ]
+      }
+    },
+    {
+      "stage": "baseline",
+      "command": "python -m source.cli.agent_tools read_postgres_charges --period 2026-08",
+      "output": {
+        "source": "postgres",
+        "period": "2026-08",
+        "count": 3,
+        "total_kopecks": 1140000,
+        "rows": [
+          {
+            "id": "charge-1",
+            "account_id": "acc-alice",
+            "period": "2026-08",
+            "amount_kopecks": 125050
+          },
+          {
+            "id": "charge-2",
+            "account_id": "acc-alice",
+            "period": "2026-08",
+            "amount_kopecks": 24950
+          },
+          {
+            "id": "charge-3",
+            "account_id": "acc-bob",
+            "period": "2026-08",
+            "amount_kopecks": 990000
+          }
+        ]
+      }
+    },
+    {
+      "stage": "baseline",
+      "command": "python -m source.cli.agent_tools reconcile_charges --period 2026-08",
+      "output": {
+        "run_id": "2a0d5de3-ef5d-49fe-9d93-5e73b8ee2646",
+        "period": "2026-08",
+        "status": "MATCH",
+        "source": {
+          "count": 3,
+          "total_kopecks": 1140000
+        },
+        "postgres": {
+          "count": 3,
+          "total_kopecks": 1140000
+        },
+        "differences": [],
+        "source_mode": "mock"
+      }
+    },
+    {
+      "stage": "discrepancy",
+      "command": "python -m source.cli.agent_tools read_onec_charges --period 2026-08",
+      "output": {
+        "source": "onec",
+        "period": "2026-08",
+        "count": 3,
+        "total_kopecks": 1140000,
+        "rows": [
+          {
+            "id": "charge-1",
+            "account_id": "acc-alice",
+            "period": "2026-08",
+            "amount_kopecks": 125050
+          },
+          {
+            "id": "charge-2",
+            "account_id": "acc-alice",
+            "period": "2026-08",
+            "amount_kopecks": 24950
+          },
+          {
+            "id": "charge-3",
+            "account_id": "acc-bob",
+            "period": "2026-08",
+            "amount_kopecks": 990000
+          }
+        ]
+      }
+    },
+    {
+      "stage": "discrepancy",
+      "command": "python -m source.cli.agent_tools read_postgres_charges --period 2026-08",
+      "output": {
+        "source": "postgres",
+        "period": "2026-08",
+        "count": 2,
+        "total_kopecks": 150100,
+        "rows": [
+          {
+            "id": "charge-1",
+            "account_id": "acc-alice",
+            "period": "2026-08",
+            "amount_kopecks": 125050
+          },
+          {
+            "id": "charge-2",
+            "account_id": "acc-alice",
+            "period": "2026-08",
+            "amount_kopecks": 25050
+          }
+        ]
+      }
+    },
+    {
+      "stage": "discrepancy",
+      "command": "python -m source.cli.agent_tools reconcile_charges --period 2026-08",
+      "output": {
+        "run_id": "e46a9a78-e150-4bc9-a115-0e979b38274f",
+        "period": "2026-08",
+        "status": "MISMATCH",
+        "source": {
+          "count": 3,
+          "total_kopecks": 1140000
+        },
+        "postgres": {
+          "count": 2,
+          "total_kopecks": 150100
+        },
+        "differences": [
+          {
+            "type": "amount_mismatch",
+            "record_id": "charge-2",
+            "account_number": "10001",
+            "source_value": 24950,
+            "postgres_value": 25050
+          },
+          {
+            "type": "missing_in_postgres",
+            "record_id": "charge-3",
+            "account_number": "20002",
+            "source_value": 990000,
+            "postgres_value": null
+          }
+        ],
+        "source_mode": "mock"
+      }
+    },
+    {
+      "stage": "restored",
+      "command": "python -m source.cli.agent_tools read_onec_charges --period 2026-08",
+      "output": {
+        "source": "onec",
+        "period": "2026-08",
+        "count": 3,
+        "total_kopecks": 1140000,
+        "rows": [
+          {
+            "id": "charge-1",
+            "account_id": "acc-alice",
+            "period": "2026-08",
+            "amount_kopecks": 125050
+          },
+          {
+            "id": "charge-2",
+            "account_id": "acc-alice",
+            "period": "2026-08",
+            "amount_kopecks": 24950
+          },
+          {
+            "id": "charge-3",
+            "account_id": "acc-bob",
+            "period": "2026-08",
+            "amount_kopecks": 990000
+          }
+        ]
+      }
+    },
+    {
+      "stage": "restored",
+      "command": "python -m source.cli.agent_tools read_postgres_charges --period 2026-08",
+      "output": {
+        "source": "postgres",
+        "period": "2026-08",
+        "count": 3,
+        "total_kopecks": 1140000,
+        "rows": [
+          {
+            "id": "charge-1",
+            "account_id": "acc-alice",
+            "period": "2026-08",
+            "amount_kopecks": 125050
+          },
+          {
+            "id": "charge-2",
+            "account_id": "acc-alice",
+            "period": "2026-08",
+            "amount_kopecks": 24950
+          },
+          {
+            "id": "charge-3",
+            "account_id": "acc-bob",
+            "period": "2026-08",
+            "amount_kopecks": 990000
+          }
+        ]
+      }
+    },
+    {
+      "stage": "restored",
+      "command": "python -m source.cli.agent_tools reconcile_charges --period 2026-08",
+      "output": {
+        "run_id": "7e479d43-4116-4eb4-9495-390db993784d",
+        "period": "2026-08",
+        "status": "MATCH",
+        "source": {
+          "count": 3,
+          "total_kopecks": 1140000
+        },
+        "postgres": {
+          "count": 3,
+          "total_kopecks": 1140000
+        },
+        "differences": [],
+        "source_mode": "mock"
+      }
+    }
+  ],
+  "real_1c_http": "BLOCKED"
+}

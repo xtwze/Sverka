@@ -1,4 +1,14 @@
-.venv
-.env
-__pycache__
-artifacts
+# Only application source and build inputs enter the backend build context.
+**
+!Dockerfile
+!pyproject.toml
+!uv.lock
+!source/
+!source/**
+!fixtures/
+!fixtures/data.json
+!scripts/
+!scripts/preflight.py
+!scripts/discrepancy.py
+**/__pycache__/
+**/*.pyc
