@@ -1,4 +1,4 @@
-# Сверка данных
+# Sverka — сверка данных 1С и PostgreSQL
 
 Веб-приложение для проверки переноса начислений из 1С в PostgreSQL.
 Стек: React, TypeScript, FastAPI, PostgreSQL.
